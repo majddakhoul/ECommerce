@@ -61,6 +61,8 @@ The application follows a layered architecture in which every request passes thr
 - Profile viewing and update, and password change with automatic token reissue.
 - User management for administrators: list with search, role and status filters and pagination, create, update, delete, and unlock.
 - Role management for administrators: list, create, view, rename, delete, and list the users of a role.
+- Product management: create, view, update, and delete products with an optional uploaded image, restricted to administrators for write operations.
+- Product browsing for every authenticated user: pagination, text search, category filter, in-stock filter, and a category list.
 - Assigning a role to a user and removing a role from a user.
 - Role-aware update operations: administrators may modify every field, while regular users may modify only their own name and email.
 - Limited number of failed login attempts with temporary account locking and administrator unlock.
@@ -142,17 +144,17 @@ app/
 │   ├── ApiException.php           # Domain exception with static helpers
 │   └── ApiExceptionRenderer.php   # Centralised JSON error rendering
 ├── Http/
-│   ├── Controllers/               # Auth, User, Role
+│   ├── Controllers/               # Auth, User, Role, Product
 │   ├── Middleware/                # EnsureUserIsActive, SecurityHeaders
 │   ├── Requests/                  # Validation and authorisation
 │   └── Resources/                 # JSON resources
-├── Models/                        # User
-├── Policies/                      # UserPolicy, RolePolicy
+├── Models/                        # User, Product
+├── Policies/                      # UserPolicy, RolePolicy, ProductPolicy
 ├── Providers/                     # App, Auth, Repository service providers
 ├── Repositories/
 │   ├── Contracts/                 # Repository interfaces
 │   └── Eloquent/                  # Eloquent implementations
-├── Services/                      # AuthService, UserService, RoleService
+├── Services/                      # AuthService, UserService, RoleService, ProductService
 ├── Support/AccessControl.php      # Role names
 └── Traits/ApiResponse.php         # Standardised JSON responses
 bootstrap/app.php                  # Routing, middleware, and exception setup
@@ -160,7 +162,7 @@ config/api.php                     # Login attempt settings
 database/                          # Migrations, factory, and seeders
 postman/                           # Postman collection
 routes/api.php                     # Versioned API routes
-tests/Feature/                     # Authentication, lockout, user, and role tests
+tests/Feature/                     # Authentication, lockout, user, role, and product tests
 ```
 
 The request flow is:
@@ -189,6 +191,7 @@ php artisan key:generate
 php artisan jwt:secret
 # configure your database connection in .env
 php artisan migrate:fresh --seed
+php artisan storage:link
 php artisan serve --port=8000
 ```
 
@@ -252,6 +255,21 @@ Role names must be lowercase, between 2 and 50 characters, contain only letters,
 
 ---
 
+### Products
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/products` | Any token | List products with `search`, `category`, `in_stock`, and `per_page` filters |
+| GET | `/products/categories` | Any token | List the distinct categories |
+| GET | `/products/{id}` | Any token | Show a product |
+| POST | `/products` | Admin | Create a product, optionally with an `image` file |
+| PUT | `/products/{id}` | Admin | Update a product |
+| DELETE | `/products/{id}` | Admin | Delete a product and its image |
+
+Product fields are `name`, `description`, `price`, `cost`, `stock`, `category`, and `image`. Categories are stored in lowercase. Images must be JPG, PNG, or WebP and at most 2 MB, and are stored on the `public` disk (run `php artisan storage:link` once so that image URLs resolve).
+
+To upload an image during an update, send a `POST` request with the form field `_method=PUT`, because PHP does not parse multipart bodies on `PUT`. Updates without an image can use a plain JSON `PUT`.
+
 ## Authorization Matrix
 
 | Operation | Admin | User |
@@ -266,6 +284,8 @@ Role names must be lowercase, between 2 and 50 characters, contain only letters,
 | Delete a user | Yes, except self | No |
 | Unlock a user | Yes | No |
 | Manage roles | Yes | No |
+| List and view products, list categories | Yes | Yes |
+| Create, update, or delete products | Yes | No |
 | Assign or remove a user's role | Yes, except own roles | No |
 
 ---
@@ -357,6 +377,7 @@ The test suite uses an in-memory SQLite database and covers:
 | `AuthTest` | Registration, login, roles in the login response, token handling, disabled accounts, profile update, and password change |
 | `LoginLockoutTest` | Failed attempt counting, lock, `423` response, counter reset, and unlock |
 | `UserTest` | Listing and filtering, creation, role-aware updates, deletion, unlock, role assignment and removal, and last-administrator protection |
+| `ProductTest` | Product CRUD, role restrictions, pagination, search, category and stock filters, image upload, replacement and cleanup, and not-found responses |
 | `RoleTest` | Role CRUD, built-in role protection, deletion of assigned roles, authorisation, and not-found responses |
 
 ---
@@ -391,7 +412,7 @@ Set `APP_DEBUG=false` outside local development. `JWT_SECRET` is generated with 
 
 ## Postman Collection
 
-A ready-to-import collection covering all 22 requests lives at [`postman/Auth-Roles.postman_collection.json`](postman/Auth-Roles.postman_collection.json). Requests are numbered in the order they are typically used and grouped into Auth, Users, and Roles. Log in once with either demo account and a collection script stores the JWT in the `token` variable for every other request.
+A ready-to-import collection covering all 28 requests lives at [`postman/Auth-Roles.postman_collection.json`](postman/Auth-Roles.postman_collection.json). Requests are numbered in the order they are typically used and grouped into Auth, Users, Roles, and Products. Log in once with either demo account and a collection script stores the JWT in the `token` variable for every other request.
 
 ---
 
