@@ -15,10 +15,10 @@ class ListUsersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'search' => ['sometimes', 'string', 'max:100'],
-            'role' => ['sometimes', 'string', 'max:50'],
-            'is_active' => ['sometimes', 'boolean'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:' . config('api.max_per_page')],
+            'search' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'role' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'is_active' => ['sometimes', 'nullable', 'boolean'],
+            'per_page' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:' . config('api.max_per_page')],
         ];
     }
 }

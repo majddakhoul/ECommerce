@@ -18,7 +18,7 @@ class UserFilterDTO
         return new self(
             search: $request->validated('search'),
             role: $role ?? $request->validated('role'),
-            isActive: $request->has('is_active') ? $request->boolean('is_active') : null,
+            isActive: $request->filled('is_active') ? $request->boolean('is_active') : null,
             perPage: (int) ($request->validated('per_page') ?? config('api.default_per_page'))
         );
     }
