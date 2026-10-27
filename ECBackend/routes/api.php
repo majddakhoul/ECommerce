@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,13 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::post('/users/{user}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
         Route::post('/users/{user}/roles', [UserController::class, 'assignRole'])->name('users.roles.assign');
         Route::delete('/users/{user}/roles/{role}', [UserController::class, 'removeRole'])->name('users.roles.remove');
+
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/categories', [ProductController::class, 'categories'])->name('products.categories');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+        Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');

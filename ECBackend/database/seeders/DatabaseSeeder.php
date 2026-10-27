@@ -18,5 +18,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $user->syncRoles([AccessControl::USER_ROLE]);
+
+        $this->call(ProductSeeder::class);
     }
 }
