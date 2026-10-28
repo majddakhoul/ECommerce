@@ -1,4 +1,4 @@
-# Authentication and Role Management API
+# ECommerce Backend API
 
 <p align="center">
 <img src="https://laravel.com/img/logomark.min.svg" height="80" alt="Laravel">
@@ -27,6 +27,8 @@
   - [Role-Based Access Control](#role-based-access-control)
   - [Account Protection Rules](#account-protection-rules)
   - [Unified Response and Error Format](#unified-response-and-error-format)
+  - [Order and Cart Security](#order-and-cart-security)
+  - [Performance Monitoring (Middleware)](#performance-monitoring-middleware)
   - [Security Headers](#security-headers)
 - [Project Structure](#project-structure)
 - [Installation and Setup](#installation-and-setup)
@@ -35,6 +37,9 @@
   - [Users](#users)
   - [Roles](#roles)
   - [User Roles](#user-roles)
+  - [Products](#products)
+  - [Cart](#cart)
+  - [Orders](#orders)
 - [Authorization Matrix](#authorization-matrix)
 - [Response Examples](#response-examples)
 - [HTTP Status Codes](#http-status-codes)
@@ -48,7 +53,7 @@
 
 ## Overview
 
-The **Authentication and Role Management API** is a server-side application built with Laravel 12. It provides a complete authentication layer based on JSON Web Tokens, a user management module, and a role management module. The system has two built-in roles, `admin` and `user`, and additional roles can be created, renamed, deleted, and assigned to users at runtime.
+The **ECommerce Backend API** is a server-side application built with Laravel 12. It provides a complete authentication layer based on JSON Web Tokens, user and role management, a product catalogue, a per-user shopping cart, and order management with role-based access control. The system has two built-in roles, `admin` and `user`, and additional roles can be created, renamed, deleted, and assigned to users at runtime.
 
 The application follows a layered architecture in which every request passes through a form request, a controller, a service, and a repository before reaching the model. Validation, authorisation, business rules, and data access are therefore kept in separate, independently testable layers.
 
@@ -63,6 +68,10 @@ The application follows a layered architecture in which every request passes thr
 - Role management for administrators: list, create, view, rename, delete, and list the users of a role.
 - Product management: create, view, update, and delete products with an optional uploaded image, restricted to administrators for write operations.
 - Product browsing for every authenticated user: pagination, text search, category filter, in-stock filter, and a category list.
+- Shopping cart per user, stored in the application cache with a 7-day lifetime: view, add, change quantity, remove, clear, and checkout.
+- Order management: place an order directly or from the cart, view orders, cancel, and change the status. Customers see only their own orders and only administrators change the status.
+- Stock reservation on order placement and stock restoration on cancellation or deletion.
+- Request performance monitoring through a middleware that logs duration, memory, and database query statistics for every API request.
 - Assigning a role to a user and removing a role from a user.
 - Role-aware update operations: administrators may modify every field, while regular users may modify only their own name and email.
 - Limited number of failed login attempts with temporary account locking and administrator unlock.
@@ -129,6 +138,20 @@ Authorisation runs inside the form request, so an unauthorised request receives 
 
 Every response, including framework-level errors such as unknown routes, missing models, validation failures, and throttling, uses the same JSON structure. A missing model returns a specific message such as `Role not found.` or `User not found.` instead of a generic routing error.
 
+### Order and Cart Security
+
+- A customer can view and cancel only their own orders. Another customer's order returns `403`.
+- Only administrators can list all orders, change an order status, or delete an order.
+- Status changes follow fixed transitions: `pending` to `confirmed`, `processing`, or `cancelled`; `confirmed` to `processing`, `delivered`, or `cancelled`; `processing` to `delivered` or `cancelled`. Delivered and cancelled orders are final.
+- Order lines keep a snapshot of the product name and price, so the history stays intact when a product is later changed or deleted.
+- The cart belongs to the authenticated user and is never exposed to other users.
+
+### Performance Monitoring (Middleware)
+
+`PerformanceMiddleware` wraps every API request. It generates a trace identifier, listens to the database queries, and writes a `REQUEST_START` and a `REQUEST_END` entry to the dedicated `performance` log channel (`storage/logs/performance-YYYY-MM-DD.log`, JSON formatted, kept for 14 days). The entries include the route, user, IP, request and response sizes, duration, memory used, peak memory, query count, total query time, and the slowest query.
+
+Every response also carries the headers `X-Trace-Id`, `X-Response-Time-ms`, and `X-Memory-Used-kb`.
+
 ### Security Headers
 
 A middleware adds security headers to every API response, including `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`.
@@ -144,25 +167,27 @@ app/
 │   ├── ApiException.php           # Domain exception with static helpers
 │   └── ApiExceptionRenderer.php   # Centralised JSON error rendering
 ├── Http/
-│   ├── Controllers/               # Auth, User, Role, Product
-│   ├── Middleware/                # EnsureUserIsActive, SecurityHeaders
+│   ├── Controllers/               # Auth, User, Role, Product, Cart, Order
+│   ├── Middleware/                # EnsureUserIsActive, SecurityHeaders, PerformanceMiddleware
 │   ├── Requests/                  # Validation and authorisation
 │   └── Resources/                 # JSON resources
-├── Models/                        # User, Product
-├── Policies/                      # UserPolicy, RolePolicy, ProductPolicy
+├── Logging/                       # PerformanceLogFormatter
+├── Models/                        # User, Product, Order, OrderItem
+├── Policies/                      # User, Role, Product, and Order policies
 ├── Providers/                     # App, Auth, Repository service providers
 ├── Repositories/
+│   ├── Cache/                     # Cache-based cart repository
 │   ├── Contracts/                 # Repository interfaces
 │   └── Eloquent/                  # Eloquent implementations
-├── Services/                      # AuthService, UserService, RoleService, ProductService
-├── Support/AccessControl.php      # Role names
+├── Services/                      # Auth, User, Role, Product, Cart, and Order services
+├── Support/                       # AccessControl (roles), OrderStatus (statuses and transitions)
 └── Traits/ApiResponse.php         # Standardised JSON responses
 bootstrap/app.php                  # Routing, middleware, and exception setup
 config/api.php                     # Login attempt settings
 database/                          # Migrations, factory, and seeders
 postman/                           # Postman collection
 routes/api.php                     # Versioned API routes
-tests/Feature/                     # Authentication, lockout, user, role, and product tests
+tests/Feature/                     # Authentication, lockout, user, role, product, cart, and order tests
 ```
 
 The request flow is:
@@ -270,6 +295,33 @@ Product fields are `name`, `description`, `price`, `cost`, `stock`, `category`, 
 
 To upload an image during an update, send a `POST` request with the form field `_method=PUT`, because PHP does not parse multipart bodies on `PUT`. Updates without an image can use a plain JSON `PUT`.
 
+### Cart
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/cart` | Any token | View the cart with totals |
+| POST | `/cart/items` | Any token | Add a product with `product_id` and `quantity` |
+| PUT | `/cart/items/{productId}` | Any token | Set the quantity of a product in the cart |
+| DELETE | `/cart/items/{productId}` | Any token | Remove a product from the cart |
+| DELETE | `/cart` | Any token | Empty the cart |
+| POST | `/cart/checkout` | Any token | Convert the cart into an order |
+
+The cart is stored through the application cache (`CACHE_STORE`) under the key `cart:user:{id}` for seven days, so no Redis server is required. Adding or updating an item is rejected with `409` when the quantity exceeds the available stock.
+
+### Orders
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/orders` | Admin | List all orders with `status`, `user_id`, and `per_page` filters |
+| GET | `/orders/my` | Any token | List the current user's orders |
+| POST | `/orders` | Any token | Place an order from an `items` array of `product_id` and `quantity` |
+| GET | `/orders/{id}` | Owner or admin | Show an order with its items |
+| PUT | `/orders/{id}/status` | Admin | Change the status |
+| POST | `/orders/{id}/cancel` | Owner or admin | Cancel an order and restore the stock |
+| DELETE | `/orders/{id}` | Admin | Delete an order |
+
+Order statuses are `pending`, `confirmed`, `processing`, `delivered`, and `cancelled`. A new order starts as `pending`. Placing an order checks the stock of every line first, then reserves it, and if any line cannot be reserved the lines already reserved are released and nothing is created.
+
 ## Authorization Matrix
 
 | Operation | Admin | User |
@@ -286,6 +338,11 @@ To upload an image during an update, send a `POST` request with the form field `
 | Manage roles | Yes | No |
 | List and view products, list categories | Yes | Yes |
 | Create, update, or delete products | Yes | No |
+| Use own cart (view, add, update, remove, clear, checkout) | Yes | Yes |
+| Place an order | Yes | Yes |
+| View and cancel own orders | Yes | Yes |
+| View or cancel another user's order | Yes | No |
+| List all orders, change status, delete an order | Yes | No |
 | Assign or remove a user's role | Yes, except own roles | No |
 
 ---
@@ -378,6 +435,8 @@ The test suite uses an in-memory SQLite database and covers:
 | `LoginLockoutTest` | Failed attempt counting, lock, `423` response, counter reset, and unlock |
 | `UserTest` | Listing and filtering, creation, role-aware updates, deletion, unlock, role assignment and removal, and last-administrator protection |
 | `ProductTest` | Product CRUD, role restrictions, pagination, search, category and stock filters, image upload, replacement and cleanup, and not-found responses |
+| `CartTest` | Cart operations, stock limits, privacy between users, checkout, and failed checkout without side effects |
+| `OrderTest` | Placing orders, stock reservation and restoration, ownership rules, admin-only actions, status transitions, order history after product deletion, and the performance headers |
 | `RoleTest` | Role CRUD, built-in role protection, deletion of assigned roles, authorisation, and not-found responses |
 
 ---
@@ -412,7 +471,7 @@ Set `APP_DEBUG=false` outside local development. `JWT_SECRET` is generated with 
 
 ## Postman Collection
 
-A ready-to-import collection covering all 28 requests lives at [`postman/Auth-Roles.postman_collection.json`](postman/Auth-Roles.postman_collection.json). Requests are numbered in the order they are typically used and grouped into Auth, Users, Roles, and Products. Log in once with either demo account and a collection script stores the JWT in the `token` variable for every other request.
+A ready-to-import collection covering all 41 requests lives at [`postman/ECommerce.postman_collection.json`](postman/ECommerce.postman_collection.json). Requests are numbered in the order they are typically used and grouped into Auth, Users, Roles, Products, Cart, and Orders. Log in once with either demo account and a collection script stores the JWT in the `token` variable for every other request.
 
 ---
 

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -39,6 +41,21 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
         Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+        Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.items.add');
+        Route::put('/cart/items/{product}', [CartController::class, 'updateItem'])->name('cart.items.update');
+        Route::delete('/cart/items/{product}', [CartController::class, 'removeItem'])->name('cart.items.remove');
+        Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+        Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/my', [OrderController::class, 'mine'])->name('orders.mine');
+        Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');

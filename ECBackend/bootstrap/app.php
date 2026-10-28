@@ -3,6 +3,7 @@
 use App\Exceptions\ApiException;
 use App\Exceptions\ApiExceptionRenderer;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\PerformanceMiddleware;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,10 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
+            'performance' => PerformanceMiddleware::class,
         ]);
 
         $middleware->throttleApi('api');
-        $middleware->api(append: [SecurityHeaders::class]);
+        $middleware->api(append: [PerformanceMiddleware::class, SecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport([ApiException::class]);

@@ -18,4 +18,10 @@ interface ProductRepositoryInterface
     public function update(Product $product, array $data): Product;
 
     public function delete(Product $product): bool;
+
+    public function findMany(array $ids): Collection;
+
+    public function decrementStock(int $id, int $quantity): bool;
+
+    public function incrementStock(int $id, int $quantity): void;
 }

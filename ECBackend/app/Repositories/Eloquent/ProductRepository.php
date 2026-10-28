@@ -54,4 +54,21 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return $product->delete();
     }
+
+    public function findMany(array $ids): Collection
+    {
+        return Product::whereIn('id', $ids)->get()->keyBy('id');
+    }
+
+    public function decrementStock(int $id, int $quantity): bool
+    {
+        return Product::where('id', $id)
+            ->where('stock', '>=', $quantity)
+            ->decrement('stock', $quantity) > 0;
+    }
+
+    public function incrementStock(int $id, int $quantity): void
+    {
+        Product::where('id', $id)->increment('stock', $quantity);
+    }
 }
