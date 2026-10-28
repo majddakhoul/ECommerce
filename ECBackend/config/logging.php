@@ -94,6 +94,14 @@ return [
             'processors' => [PsrLogMessageProcessor::class],
         ],
 
+        'performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/performance.log'),
+            'level' => 'debug',
+            'days' => 14,
+            'tap' => [App\Logging\PerformanceLogFormatter::class],
+        ],
+
         'stderr' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
