@@ -1,39 +1,65 @@
 services:
   app:
     build: .
+    container_name: ecommerce_app
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8000
+      APP_URL: ${APP_URL:-http://localhost:8000}
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: auth_system
-      DB_USERNAME: auth
+      DB_DATABASE: ecommerce
+      DB_USERNAME: ecommerce
       DB_PASSWORD: secret
-      CACHE_DRIVER: file
-      APP_KEY: ${APP_KEY}
-      JWT_SECRET: ${JWT_SECRET}
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - product_images:/var/www/html/storage/app/public
+      - app_logs:/var/www/html/storage/logs
     depends_on:
       db:
         condition: service_healthy
 
   db:
     image: mysql:8.0
+    container_name: ecommerce_db
+    restart: unless-stopped
     environment:
-      MYSQL_DATABASE: auth_system
-      MYSQL_USER: auth
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: ecommerce
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
     volumes:
-      - dbdata:/var/lib/mysql
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: ecommerce_pma
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  dbdata:
+  db_data:
+  product_images:
+  app_logs:

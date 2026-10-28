@@ -9,13 +9,15 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY composer.json ./
-RUN composer install --no-interaction --no-scripts --prefer-dist
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --no-scripts --prefer-dist --no-dev --optimize-autoloader
 
 COPY . .
-RUN composer dump-autoload --optimize --no-scripts \
-    && chmod -R ug+rwx storage bootstrap/cache
+RUN composer dump-autoload --optimize --no-dev \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/app/public bootstrap/cache \
+    && chmod -R ug+rwx storage bootstrap/cache \
+    && chmod +x docker/entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=8000"]
+ENTRYPOINT ["docker/entrypoint.sh"]

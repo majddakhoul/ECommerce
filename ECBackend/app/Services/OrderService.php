@@ -17,7 +17,8 @@ class OrderService
 {
     public function __construct(
         protected OrderRepositoryInterface $orderRepo,
-        protected ProductRepositoryInterface $productRepo
+        protected ProductRepositoryInterface $productRepo,
+        protected NotificationService $notifications
     ) {}
 
     public function list(OrderFilterDTO $filter): LengthAwarePaginator
@@ -86,7 +87,11 @@ class OrderService
             'status' => OrderStatus::PENDING,
         ], $lines);
 
-        return $order->load('items');
+        $order->load('items');
+
+        $this->notifications->sendOrderPlaced($order);
+
+        return $order;
     }
 
     public function updateStatus(Order $order, UpdateOrderStatusDTO $dto): Order
@@ -94,6 +99,8 @@ class OrderService
         if (!OrderStatus::canMove($order->status, $dto->status)) {
             throw ApiException::conflict("Cannot change the order status from '{$order->status}' to '{$dto->status}'.");
         }
+
+        $previousStatus = $order->status;
 
         if ($dto->status === OrderStatus::CANCELLED) {
             $this->restock($order);
@@ -105,7 +112,11 @@ class OrderService
             $data['delivered_at'] = now();
         }
 
-        return $this->orderRepo->update($order, $data)->load('items');
+        $updated = $this->orderRepo->update($order, $data)->load('items');
+
+        $this->notifications->sendOrderStatusUpdated($updated, $previousStatus);
+
+        return $updated;
     }
 
     public function cancel(Order $order): Order
