@@ -1,5 +1,7 @@
 # ECommerce Backend API
 
+> Part of the [ECommerce](../README.md) project. The mobile client lives in [`ECFrontend`](../ECFrontend/README.md).
+
 <p align="center">
 <img src="https://laravel.com/img/logomark.min.svg" height="80" alt="Laravel">
 </p>
@@ -30,8 +32,11 @@
   - [Order and Cart Security](#order-and-cart-security)
   - [Performance Monitoring (Middleware)](#performance-monitoring-middleware)
   - [Security Headers](#security-headers)
+- [Stock Management](#stock-management)
+- [Email Notifications](#email-notifications)
 - [Project Structure](#project-structure)
 - [Installation and Setup](#installation-and-setup)
+  - [Running with Docker](#running-with-docker)
 - [API Endpoints](#api-endpoints)
   - [Authentication](#authentication)
   - [Users](#users)
@@ -71,6 +76,7 @@ The application follows a layered architecture in which every request passes thr
 - Shopping cart per user, stored in the application cache with a 7-day lifetime: view, add, change quantity, remove, clear, and checkout.
 - Order management: place an order directly or from the cart, view orders, cancel, and change the status. Customers see only their own orders and only administrators change the status.
 - Stock reservation on order placement and stock restoration on cancellation or deletion.
+- Email notifications: the customer and every administrator are emailed when an order is placed, and the customer is emailed when an administrator changes the order status.
 - Request performance monitoring through a middleware that logs duration, memory, and database query statistics for every API request.
 - Assigning a role to a user and removing a role from a user.
 - Role-aware update operations: administrators may modify every field, while regular users may modify only their own name and email.
@@ -158,6 +164,53 @@ A middleware adds security headers to every API response, including `X-Content-T
 
 ---
 
+## Stock Management
+
+Stock is reserved when an order is placed and restored when it is cancelled.
+
+| Event | Effect on stock |
+|---|---|
+| Order placed (direct or from the cart) | Stock is reduced immediately and the order starts as `pending` |
+| Order confirmed or moved to processing | No change |
+| Order delivered | No change; delivered orders are final |
+| Order cancelled by the customer or by an administrator | Stock is restored |
+| Status changed to `cancelled` by an administrator | Stock is restored |
+| Order deleted while still cancellable | Stock is restored |
+| Order deleted after delivery or cancellation | No change, so stock is never restored twice |
+
+The reduction is atomic (`stock >= quantity` is part of the update), so two simultaneous orders can never push the stock below zero. If one line of an order cannot be reserved, the lines already reserved are released and the request fails with `409`.
+
+---
+
+## Email Notifications
+
+Emails are sent synchronously through Laravel's mailer by `NotificationService`. A delivery failure is written to `storage/logs/laravel.log` as `Order email failed` and never breaks the order request.
+
+| Trigger | Recipient | Template |
+|---|---|---|
+| Order placed | The customer | `emails/order_placed_user` |
+| Order placed | Every user with the `admin` role | `emails/order_placed_admin` |
+| Order status changed by an administrator | The order owner | `emails/order_status_updated` |
+
+The status email shows the previous and the current status with a message specific to `confirmed`, `processing`, `delivered`, and `cancelled`, together with the order lines and the total.
+
+**Gmail SMTP configuration**
+
+```ini
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_FROM_ADDRESS=your_email@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Gmail requires an App Password, not the account password. With `MAIL_MAILER=log` (the default) emails are written to the log instead of being sent. After changing `.env` run `php artisan config:clear`.
+
+---
+
 ## Project Structure
 
 ```text
@@ -172,6 +225,7 @@ app/
 │   ├── Requests/                  # Validation and authorisation
 │   └── Resources/                 # JSON resources
 ├── Logging/                       # PerformanceLogFormatter
+├── Mail/                          # OrderPlacedUserMail, OrderPlacedAdminMail, OrderStatusUpdatedMail
 ├── Models/                        # User, Product, Order, OrderItem
 ├── Policies/                      # User, Role, Product, and Order policies
 ├── Providers/                     # App, Auth, Repository service providers
@@ -179,10 +233,12 @@ app/
 │   ├── Cache/                     # Cache-based cart repository
 │   ├── Contracts/                 # Repository interfaces
 │   └── Eloquent/                  # Eloquent implementations
-├── Services/                      # Auth, User, Role, Product, Cart, and Order services
+├── Services/                      # Auth, User, Role, Product, Cart, Order, and Notification services
 ├── Support/                       # AccessControl (roles), OrderStatus (statuses and transitions)
 └── Traits/ApiResponse.php         # Standardised JSON responses
 bootstrap/app.php                  # Routing, middleware, and exception setup
+docker/                            # Container entrypoint
+resources/views/emails/            # Order email templates
 config/api.php                     # Login attempt settings
 database/                          # Migrations, factory, and seeders
 postman/                           # Postman collection
@@ -221,6 +277,23 @@ php artisan serve --port=8000
 ```
 
 If a stale `composer.lock` is present, delete it and run `composer update` instead of `composer install`.
+
+### Running with Docker
+
+```bash
+docker compose up --build
+```
+
+This starts three containers: the API on `http://localhost:8000`, MySQL 8 (host port `3307`, database `ecommerce`), and phpMyAdmin on `http://localhost:8080`. The entrypoint runs the migrations, the seeders, and `storage:link` before the server starts. Settings are read from your `.env`, and only the database connection is overridden to point at the `db` container.
+
+```bash
+docker compose up -d
+docker compose logs -f app
+docker compose stop
+docker compose down -v
+```
+
+Uploaded images, logs, and the database live in named volumes and survive restarts. `down -v` removes them.
 
 **Demo accounts** (password `password`)
 
@@ -463,6 +536,15 @@ JWT_REFRESH_TTL=20160
 
 LOGIN_MAX_ATTEMPTS=5
 LOGIN_LOCKOUT_MINUTES=15
+
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_FROM_ADDRESS=
+QUEUE_CONNECTION=sync
 ```
 
 Set `APP_DEBUG=false` outside local development. `JWT_SECRET` is generated with `php artisan jwt:secret`. Never commit the `.env` file.
@@ -486,4 +568,4 @@ A ready-to-import collection covering all 41 requests lives at [`postman/ECommer
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is released under the [MIT License](LICENSE). Copyright (c) 2026 Majd AlDakhoul.
