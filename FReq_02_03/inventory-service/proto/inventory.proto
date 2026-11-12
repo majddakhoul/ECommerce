@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package inventory.v1;
+option go_package = "github.com/ecommerce/inventory-service/gen/inventory/v1;inventoryv1";
+
+service InventoryService {
+  rpc GetProduct(GetProductRequest) returns (ProductResponse);
+  rpc EnsureProduct(EnsureProductRequest) returns (ProductResponse);
+  rpc SetStock(SetStockRequest) returns (ProductResponse);
+  rpc Reserve(ReserveRequest) returns (ReserveResponse);
+  rpc Release(ReleaseRequest) returns (ReleaseResponse);
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message GetProductRequest { int64 product_id = 1; }
+message EnsureProductRequest { int64 product_id = 1; string name = 2; int64 stock = 3; }
+message SetStockRequest { int64 product_id = 1; int64 stock = 2; }
+message ProductResponse { int64 product_id = 1; string name = 2; int64 stock = 3; }
+message ReservationItem { int64 product_id = 1; int64 quantity = 2; }
+message ReserveRequest { string reservation_id = 1; repeated ReservationItem items = 2; }
+message ReserveResponse { bool reserved = 1; string message = 2; }
+message ReleaseRequest { string reservation_id = 1; }
+message ReleaseResponse { bool released = 1; string message = 2; }
+message HealthRequest {}
+message HealthResponse { string status = 1; }
