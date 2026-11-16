@@ -1,14 +1,63 @@
 # FReq_02_03 - Requirements 2 and 3
 
-> Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../FReq_01). This folder holds requirements 2 and 3 together, because requirement 3 builds directly on the service split of requirement 2: one platform, one Laravel API with the routes `/api/v1`, `/api/v2` and `/api/v3`, one Go inventory service.
+<p align="center">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44">
+<img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT">
+<img src="https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white" alt="Go 1.24">
+<img src="https://img.shields.io/badge/gRPC-inventory.v1-244C5A?logo=grpc&logoColor=white" alt="gRPC">
+<img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis 7">
+<img src="https://img.shields.io/badge/k6-load%20tests-7D64FF?logo=k6&logoColor=white" alt="k6">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+</p>
+
+[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](README.md)
+
+Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../FReq_01/README.md). This folder holds requirements 2 and 3 together, because requirement 3 builds directly on the service split of requirement 2: one platform, one Laravel API with the routes `/api/v1`, `/api/v2` and `/api/v3`, and one Go inventory service.
 
 [Documentation index](docs/README.md) · [Architecture](docs/architecture.md) · [Docker](docs/docker.md) · [Local set-up](docs/local-setup.md) · [Testing](docs/testing.md) · [Security](docs/security.md) · [Troubleshooting](docs/troubleshooting.md) · [Verification status](docs/verification-status.md)
+
+---
+
+## Table of Contents
+
+- [Repository Layout](#repository-layout)
+- [Components](#components)
+- [Choose How to Run](#choose-how-to-run)
+- [Demo Accounts](#demo-accounts)
+- [Requirement 2 - Communication between services](#requirement-2---communication-between-services)
+- [Requirement 3 - Performance and caching](#requirement-3---performance-and-caching)
+- [How the Two Requirements Connect](#how-the-two-requirements-connect)
+- [Verification Status](#verification-status)
+- [Tech Stack](#tech-stack)
+- [License](#license)
+
+---
+
+## Repository Layout
+
+```text
+FReq_02_03/
+├── ECBackend/            Laravel API with v1, v2, v3, lab API, Postman collections
+├── ECInventory/          Go gRPC inventory service and seeder
+├── proto/                The gRPC contract
+├── loadtest/             k6 scripts
+├── docker/               MySQL replication scripts
+├── docs/                 Cross-cutting documentation
+├── docker-compose.yml    The whole platform
+├── .env.example          Development values
+└── PERFORMANCE.md        Measurement guide and results
+```
+
+---
 
 ## Components
 
 | Component | Purpose | Guide |
-| --- | --- | --- |
-| [`ECBackend`](ECBackend) | Laravel API with v1, v2 and v3, lab API, Postman collections | [README](ECBackend/README.md) |
+|---|---|---|
+| [`ECBackend`](ECBackend) | Laravel API with v1, v2 and v3, lab API, Postman collections. Requirement 1 version: [FReq_01/ECBackend](../FReq_01/ECBackend/README.md) | [README](ECBackend/README.md) |
 | [`ECInventory`](ECInventory) | Go gRPC inventory service and seeder | [README](ECInventory/README.md) |
 | [`proto`](proto) | The gRPC contract shared by both | [README](proto/README.md) |
 | [`loadtest`](loadtest) | k6 scripts | [README](loadtest/README.md) |
@@ -17,15 +66,17 @@
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Measurement procedure and results | [PERFORMANCE.md](PERFORMANCE.md) |
 
 | Requirement | Routes | Postman collection |
-| --- | --- | --- |
+|---|---|---|
 | 1. API and security | `/api/v1` | [`Requirement-1-v1`](ECBackend/postman/Requirement-1-v1.postman_collection.json) |
 | 2. Communication between services | `/api/v2` | [`Requirement-2-v2`](ECBackend/postman/Requirement-2-v2.postman_collection.json) |
 | 3. Performance and caching | `/api/v3` | [`Requirement-3-v3`](ECBackend/postman/Requirement-3-v3.postman_collection.json) |
 
-## Choose how to run
+---
+
+## Choose How to Run
 
 | Option | Use it when | Status | Guide |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | Local without Docker | You have PHP, Go and MySQL, for example XAMPP | Run and verified | [local-setup.md](docs/local-setup.md) |
 | Docker Compose | You want Redis, the replica and a reproducible set-up | Written, never executed | [docker.md](docs/docker.md) |
 
@@ -40,7 +91,7 @@ docker compose up --build
 ```
 
 | Container | Role | Port |
-| --- | --- | --- |
+|---|---|---|
 | `ec23_app` | Laravel API | 8000 |
 | `ec23_db` | API database, replication source | 3307 |
 | `ec23_db_replica` | Read replica | 3309 |
@@ -49,20 +100,31 @@ docker compose up --build
 | `ec23_inventory_db` | Inventory database | 3308 |
 | `ec23_pma` | phpMyAdmin | 8080 |
 
-Demo accounts, password `password`: `admin@example.com` and `user@example.com`. Stop with `docker compose down`, reset all data with `docker compose down -v`.
+Stop with `docker compose down`, reset all data with `docker compose down -v`.
+
+---
+
+## Demo Accounts
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@example.com` | `password` |
+| User | `user@example.com` | `password` |
+
+---
 
 ## Requirement 2 - Communication between services
 
 Stock management is split out of Laravel into an independent Go service with its own MySQL database. The two services share one gRPC contract and nothing else. The design is in [architecture.md](docs/architecture.md#requirement-2-design).
 
-```
+```text
 Client -> Laravel API --gRPC + x-api-key--> Go inventory service
              |                                   |
        MySQL (products, orders)           MySQL (stock, reservations)
 ```
 
 | Requirement | Answer |
-| --- | --- |
+|---|---|
 | Shared contract | [`proto/inventory.proto`](proto/inventory.proto), generated into Go and PHP |
 | Another language, own database | [`ECInventory`](ECInventory/README.md), Go and MySQL 8 |
 | Get, reserve, release | `GetStock`, `GetStocks`, `ListAvailableProductIds`, `SetStock`, `DeleteStock`, `ReserveStock`, `ReleaseStock` |
@@ -95,11 +157,13 @@ k6 run -e BASE_URL=http://localhost:8000 loadtest/race.js
 
 The first runs in `ECBackend`, the second and third in `ECInventory`, the fourth here. The race script sends ten simultaneous HTTP orders for a product with stock 1: `orders_created` must be 1, `orders_conflict` 9, `orders_unexpected` 0. With Docker, the same checks run as `docker compose run --rm inventory-tests` and `docker compose --profile tools run --rm k6 run /scripts/race.js`.
 
+---
+
 ## Requirement 3 - Performance and caching
 
 The read path of the catalog is faster and stays correct. The design is in [architecture.md](docs/architecture.md#requirement-3-design).
 
-```
+```text
 Client -> Laravel API (/api/v3)
            |-- Redis: catalog pages and rows (versioned keys, TTL, LRU)
            |-- MySQL primary: writes, and reads right after a write
@@ -108,7 +172,7 @@ Client -> Laravel API (/api/v3)
 ```
 
 | Requirement | Answer |
-| --- | --- |
+|---|---|
 | Large seeded data | `php artisan perf:seed` inserts 50,000 products and 200,000 orders with lines in batches |
 | Baseline | The `compare` lab endpoint and k6 against `/api/v2` before any change |
 | EXPLAIN, indexes, N+1 | `GET /api/v3/performance/explain`, `php artisan perf:indexes add|drop|status`, the `orders` comparison |
@@ -121,22 +185,39 @@ Client -> Laravel API (/api/v3)
 
 Measured on the local set-up (file cache, no replica): search 43.9 times faster in process, the N+1 query count from 31 to 3, zero stale reads with invalidation on and 49 of 50 with it off. The load-test tail latency improved only with the indexes, not with the cache, and the reasons are in the [findings](PERFORMANCE.md#findings). The replica and Redis were not measured.
 
-## How the two requirements connect
+---
+
+## How the Two Requirements Connect
 
 - The stock is never cached, so requirement 3 reuses the gRPC calls of requirement 2 (`GetStocks` for every list page) and stays correct.
 - An order changes stock only, so it does not invalidate the product cache.
 - `/api/v2` is the baseline that `/api/v3` is measured against, on the same data.
 
-## Folder map
+---
 
-| Path | Content |
-| --- | --- |
-| `ECBackend` | Laravel API with v1, v2 and v3 |
-| `ECInventory` | Go inventory service and seeder |
-| `proto` | The gRPC contract |
-| `loadtest` | k6 scripts: `compare.js`, `consistency.js`, `race.js` |
-| `docker` | MySQL replication scripts |
-| `docs` | Cross-cutting documentation |
-| `docker-compose.yml` | The whole platform |
-| `.env.example` | Development values. Copy to `.env`, never commit `.env`. |
-| `PERFORMANCE.md` | Measurement guide and results |
+## Verification Status
+
+| Area | Status |
+|---|---|
+| Laravel tests | 148 passing |
+| Go unit and integration tests | Passing, integration on real MySQL |
+| Race condition proof | Passing, one order created and nine conflicts out of ten |
+| k6 steps 0 to 2, consistency, explain | Measured, see [PERFORMANCE.md](PERFORMANCE.md#results) |
+| Redis, read replica, Docker stack | Not run, see [verification-status.md](docs/verification-status.md) |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| API | Laravel 12, PHP 8.2+, `tymon/jwt-auth`, `spatie/laravel-permission`, `grpc/grpc` |
+| Inventory service | Go 1.24, gRPC, protobuf, MySQL |
+| Data | MySQL 8 with GTID replication, Redis 7 |
+| Tooling | Docker Compose, PHPUnit, Go test, k6, Postman |
+
+---
+
+## License
+
+This project is released under the [MIT License](../LICENSE). Copyright (c) 2026 Majd AlDakhoul.
