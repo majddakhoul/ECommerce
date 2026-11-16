@@ -2,9 +2,24 @@
 
 > Part of the [ECommerce](../../README.md) repository, requirements 2 and 3 ([FReq_02_03](../README.md)). This service owns the stock of every product. The Laravel API in [`ECBackend`](../ECBackend/README.md) calls it over gRPC. The contract is [`proto/inventory.proto`](../proto/README.md). See also: [documentation index](../docs/README.md), [architecture](../docs/architecture.md), [Docker guide](../docs/docker.md), [local set-up](../docs/local-setup.md), [testing](../docs/testing.md).
 
+<p align="center">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44">
+<img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT">
+<img src="https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white" alt="Go 1.24">
+<img src="https://img.shields.io/badge/gRPC-inventory.v1-244C5A?logo=grpc&logoColor=white" alt="gRPC">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+</p>
+
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md)
+
 A Go gRPC service with its own MySQL database. It is the only place where quantities are stored, changed and reserved.
 
-## Contents
+---
+
+## Table of Contents
 
 - [Why a separate service](#why-a-separate-service)
 - [Architecture](#architecture)
@@ -17,9 +32,13 @@ A Go gRPC service with its own MySQL database. It is the only place where quanti
 - [Tests](#tests)
 - [Generated code](#generated-code)
 
+---
+
 ## Why a separate service
 
 Stock is the data that several users change at the same moment. Keeping it in one small service with one database gives a single source of truth, an atomic place to decide whether an order can be served, and a boundary that can be scaled and deployed on its own. Laravel keeps only the product description and price.
+
+---
 
 ## Architecture
 
@@ -39,6 +58,8 @@ tests/integration       tests against a real MySQL (build tag integration)
 
 `internal/service` declares the interfaces it needs in `ports.go` (`InventoryRepository`, `ReservationRepository`, `Store`). The MySQL package implements them, and the unit tests implement them in memory. That is why the business rules are tested without a database.
 
+---
+
 ## Calls
 
 | Call | Purpose |
@@ -51,6 +72,8 @@ tests/integration       tests against a real MySQL (build tag integration)
 | `DeleteStock` | Remove the record of a deleted product |
 | `ReserveStock` | Take stock for an order, all items or none |
 | `ReleaseStock` | Give a reservation back, at most once |
+
+---
 
 ## Reservations
 
@@ -67,6 +90,8 @@ The row lock taken by this statement makes the check and the decrement a single 
 - `ReleaseStock` marks each reservation row as released before it adds the quantity back, so a second release does nothing.
 - Deadlocks and lock timeouts are retried up to three times.
 
+---
+
 ## Errors
 
 | Situation | gRPC status |
@@ -78,6 +103,8 @@ The row lock taken by this statement makes the check and the decrement a single 
 | Anything else | `INTERNAL` |
 
 Not enough stock is not an error: `ReserveStock` answers `reserved = false` with the list of shortages, and Laravel turns it into HTTP 409.
+
+---
 
 ## Configuration
 
@@ -92,6 +119,8 @@ Not enough stock is not an error: `ReserveStock` answers `reserved = false` with
 | `APP_DB_HOST`, `APP_DB_PORT`, `APP_DB_USER`, `APP_DB_PASSWORD`, `APP_DB_NAME` | `127.0.0.1`, `3306`, `root`, empty, `auth_system` | Application database, read only by the seeder to list product ids |
 
 The tables `inventory_items` and `stock_reservations` are created at start-up.
+
+---
 
 ## Running
 
@@ -127,6 +156,8 @@ go run ./cmd/server
 
 The tables are created on start. The complete set-up of both services is in [local-setup.md](../docs/local-setup.md).
 
+---
+
 ## Seeding
 
 `cmd/seed` empties `inventory_items` and `stock_reservations`, reads every product id from the application database and stores one quantity per product.
@@ -139,6 +170,8 @@ go run ./cmd/seed -min 20 -max 300 -seed 5
 The same `-seed` value always gives the same quantities. The command stops without touching the inventory when the application database has no products.
 
 To reset both databases, run `php artisan migrate:fresh --seed` in `ECBackend` first, then `go run ./cmd/seed`. Product ids change after a fresh migration, so the seeder must run last.
+
+---
 
 ## Tests
 
@@ -160,6 +193,14 @@ docker compose --profile tools run --rm inventory-tests
 
 They prove the same guarantees on InnoDB: ten concurrent reservations for a stock of one give one success, a release restores stock exactly once, and eight identical concurrent reservations decrement once.
 
+---
+
 ## Generated code
 
 `gen/inventorypb` is generated and not committed. To work on the service outside Docker, install `protoc`, `protoc-gen-go` and `protoc-gen-go-grpc`, then run `make proto`. The first Docker build also writes `go.sum` inside the image. To keep a copy in the repository, run `go mod tidy` once and commit the file.
+
+---
+
+## License
+
+This project is released under the [MIT License](../../LICENSE). Copyright (c) 2026 Majd AlDakhoul.
