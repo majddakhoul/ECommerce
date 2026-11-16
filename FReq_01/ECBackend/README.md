@@ -1,20 +1,24 @@
 # ECommerce Backend API
 
-> Part of the [ECommerce](../README.md) project. The mobile client lives in [`ECFrontend`](../ECFrontend/README.md).
+> Requirement 1 of the [ECommerce](../../README.md) repository ([FReq_01](../README.md)). The mobile client lives in [`ECFrontend`](../ECFrontend/README.md). Requirements 2 and 3 extend this API in [`FReq_02_03/ECBackend`](../../FReq_02_03/ECBackend/README.md), where stock moves to the [inventory service](../../FReq_02_03/ECInventory/README.md).
 
 <p align="center">
 <img src="https://laravel.com/img/logomark.min.svg" height="80" alt="Laravel">
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?logo=laravel" alt="Laravel 12.x">
-<img src="https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php" alt="PHP 8.2+">
-<img src="https://img.shields.io/badge/MySQL-8.x-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.x">
-<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT Auth">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44">
+<img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT">
+<img src="https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
 <img src="https://img.shields.io/badge/Spatie-laravel--permission-6B46C1" alt="Spatie Laravel Permission">
 <img src="https://img.shields.io/badge/PHPUnit-11-366488?logo=php&logoColor=white" alt="PHPUnit 11">
-<img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
+
+[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md)
 
 ---
 
@@ -215,36 +219,65 @@ Gmail requires an App Password, not the account password. With `MAIL_MAILER=log`
 
 ```text
 app/
-├── DTOs/                          # Data Transfer Objects
+├── DTOs/
 ├── Exceptions/
-│   ├── ApiException.php           # Domain exception with static helpers
-│   └── ApiExceptionRenderer.php   # Centralised JSON error rendering
+│   ├── ApiException.php
+│   └── ApiExceptionRenderer.php
 ├── Http/
-│   ├── Controllers/               # Auth, User, Role, Product, Cart, Order
-│   ├── Middleware/                # EnsureUserIsActive, SecurityHeaders, PerformanceMiddleware
-│   ├── Requests/                  # Validation and authorisation
-│   └── Resources/                 # JSON resources
-├── Logging/                       # PerformanceLogFormatter
-├── Mail/                          # OrderPlacedUserMail, OrderPlacedAdminMail, OrderStatusUpdatedMail
-├── Models/                        # User, Product, Order, OrderItem
-├── Policies/                      # User, Role, Product, and Order policies
-├── Providers/                     # App, Auth, Repository service providers
+│   ├── Controllers/
+│   ├── Middleware/
+│   ├── Requests/
+│   └── Resources/
+├── Logging/
+├── Mail/
+├── Models/
+├── Policies/
+├── Providers/
 ├── Repositories/
-│   ├── Cache/                     # Cache-based cart repository
-│   ├── Contracts/                 # Repository interfaces
-│   └── Eloquent/                  # Eloquent implementations
-├── Services/                      # Auth, User, Role, Product, Cart, Order, and Notification services
-├── Support/                       # AccessControl (roles), OrderStatus (statuses and transitions)
-└── Traits/ApiResponse.php         # Standardised JSON responses
-bootstrap/app.php                  # Routing, middleware, and exception setup
-docker/                            # Container entrypoint
-resources/views/emails/            # Order email templates
-config/api.php                     # Login attempt settings
-database/                          # Migrations, factory, and seeders
-postman/                           # Postman collection
-routes/api.php                     # Versioned API routes
-tests/Feature/                     # Authentication, lockout, user, role, product, cart, and order tests
+│   ├── Cache/
+│   ├── Contracts/
+│   └── Eloquent/
+├── Services/
+├── Support/
+└── Traits/ApiResponse.php
+bootstrap/app.php
+docker/
+resources/views/emails/
+config/api.php
+database/
+postman/
+routes/api.php
+tests/Feature/
 ```
+
+| Path | Purpose |
+|---|---|
+| `DTOs/` | Data Transfer Objects |
+| `ApiException.php` | Domain exception with static helpers |
+| `ApiExceptionRenderer.php` | Centralised JSON error rendering |
+| `Controllers/` | Auth, User, Role, Product, Cart, Order |
+| `Middleware/` | EnsureUserIsActive, SecurityHeaders, PerformanceMiddleware |
+| `Requests/` | Validation and authorisation |
+| `Resources/` | JSON resources |
+| `Logging/` | PerformanceLogFormatter |
+| `Mail/` | OrderPlacedUserMail, OrderPlacedAdminMail, OrderStatusUpdatedMail |
+| `Models/` | User, Product, Order, OrderItem |
+| `Policies/` | User, Role, Product, and Order policies |
+| `Providers/` | App, Auth, Repository service providers |
+| `Cache/` | Cache-based cart repository |
+| `Contracts/` | Repository interfaces |
+| `Eloquent/` | Eloquent implementations |
+| `Services/` | Auth, User, Role, Product, Cart, Order, and Notification services |
+| `Support/` | AccessControl (roles), OrderStatus (statuses and transitions) |
+| `Traits/ApiResponse.php` | Standardised JSON responses |
+| `bootstrap/app.php` | Routing, middleware, and exception setup |
+| `docker/` | Container entrypoint |
+| `resources/views/emails/` | Order email templates |
+| `config/api.php` | Login attempt settings |
+| `database/` | Migrations, factory, and seeders |
+| `postman/` | Postman collection |
+| `routes/api.php` | Versioned API routes |
+| `tests/Feature/` | Authentication, lockout, user, role, product, cart, and order tests |
 
 The request flow is:
 
@@ -263,6 +296,8 @@ Route → FormRequest (validation and authorisation) → Controller → Service 
 
 **Steps**
 
+Set the database connection in `.env` before running the migration.
+
 ```bash
 git clone <repository-url>
 cd <project-folder>
@@ -270,7 +305,6 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan jwt:secret
-# configure your database connection in .env
 php artisan migrate:fresh --seed
 php artisan storage:link
 php artisan serve --port=8000

@@ -1,28 +1,47 @@
 services:
   app:
-    build: .
-    container_name: ecommerce_app
+    build:
+      context: ./ECBackend
+    container_name: ec23_app
     restart: unless-stopped
     ports:
-      - "8000:8000"
-    env_file:
-      - .env
+      - "${APP_PORT:-8000}:8000"
     environment:
+      APP_NAME: ECommerce
       APP_ENV: local
-      APP_URL: ${APP_URL:-http://localhost:8000}
+      APP_DEBUG: "true"
+      APP_KEY: ${APP_KEY:?copy .env.example to .env first}
+      APP_URL: http://localhost:${APP_PORT:-8000}
+      JWT_SECRET: ${JWT_SECRET:?copy .env.example to .env first}
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
       DB_DATABASE: ecommerce
       DB_USERNAME: ecommerce
       DB_PASSWORD: secret
-      DB_READ_CONNECTION: mysql
-      CACHE_STORE: redis
-      REDIS_HOST: redis
+      CACHE_STORE: file
       SESSION_DRIVER: file
       QUEUE_CONNECTION: sync
-      INVENTORY_ENABLED: "true"
-      INVENTORY_GRPC_ADDRESS: inventory:50051
+      MAIL_MAILER: log
+      API_RATE_LIMIT: ${API_RATE_LIMIT:-1000000}
+      REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+      PERFORMANCE_STORE: redis
+      PERF_CACHE_ENABLED: "true"
+      PERF_ETAG_ENABLED: "true"
+      PERF_REPLICA_ENABLED: "false"
+      PERF_FULLTEXT_ENABLED: "true"
+      PERF_CACHE_TTL: 120
+      DB_REPLICA_HOST: db-replica
+      DB_REPLICA_PORT: 3306
+      INVENTORY_DB_HOST: inventory-db
+      INVENTORY_DB_NAME: inventory
+      INVENTORY_DB_USER: inventory
+      INVENTORY_DB_PASSWORD: secret
+      INVENTORY_GRPC_HOST: inventory-service
+      INVENTORY_GRPC_PORT: 50051
+      INVENTORY_API_KEY: ${INVENTORY_API_KEY:-change-me}
+      INVENTORY_GRPC_TIMEOUT: 2
     volumes:
       - product_images:/var/www/html/storage/app/public
       - app_logs:/var/www/html/storage/logs
@@ -30,36 +49,122 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
-      inventory:
         condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+
   db:
     image: mysql:8.0
-    container_name: ecommerce_db
+    container_name: ec23_db
     restart: unless-stopped
+    command:
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --innodb-buffer-pool-size=512M
+    environment:
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: ecommerce
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/primary-init.sql:/docker-entrypoint-initdb.d/01-replication-user.sql:ro
+    ports:
+      - "${ECOMMERCE_DB_PORT:-3307}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  db-replica:
+    image: mysql:8.0
+    container_name: ec23_db_replica
+    restart: unless-stopped
+    command:
+      - --server-id=2
+      - --log-bin=mysql-bin
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --relay-log=relay-bin
+      - --read-only=ON
+      - --innodb-buffer-pool-size=512M
     environment:
       MYSQL_DATABASE: ecommerce
       MYSQL_USER: ecommerce
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3307:3306"
+      - "${REPLICA_DB_PORT:-3309}:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 30
     volumes:
-      - db_data:/var/lib/mysql
+      - replica_data:/var/lib/mysql
+
+  replica-setup:
+    image: mysql:8.0
+    container_name: ec23_replica_setup
+    restart: "no"
+    entrypoint: ["/bin/sh", "/setup/replica-setup.sh"]
+    volumes:
+      - ./docker/mysql/replica-setup.sh:/setup/replica-setup.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      db-replica:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: ec23_redis
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: ECInventory/Dockerfile
+    container_name: ec23_inventory
+    restart: unless-stopped
+    environment:
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50051
+      INVENTORY_API_KEY: ${INVENTORY_API_KEY:-change-me}
+      DB_HOST: inventory-db
+      DB_PORT: 3306
+      DB_USER: inventory
+      DB_PASSWORD: secret
+      DB_NAME: inventory
+      DB_MAX_OPEN_CONNS: 25
+    ports:
+      - "${INVENTORY_PORT:-50051}:50051"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+
   inventory-db:
     image: mysql:8.0
-    container_name: ecommerce_inventory_db
+    container_name: ec23_inventory_db
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: inventory
       MYSQL_USER: inventory
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "${INVENTORY_DB_PORT:-3308}:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
       interval: 5s
@@ -67,42 +172,56 @@ services:
       retries: 30
     volumes:
       - inventory_db_data:/var/lib/mysql
-  inventory:
-    build: ./inventory-service
-    container_name: ecommerce_inventory
-    restart: unless-stopped
-    environment:
-      GRPC_ADDR: ":50051"
-      INVENTORY_DSN: "inventory:secret@tcp(inventory-db:3306)/inventory?parseTime=true"
-    ports:
-      - "50051:50051"
-    depends_on:
-      inventory-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "sh", "-c", "nc -z 127.0.0.1 50051"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-  redis:
-    image: redis:7-alpine
-    container_name: ecommerce_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
+
   phpmyadmin:
     image: phpmyadmin:5
-    container_name: ecommerce_pma
+    container_name: ec23_pma
+    restart: unless-stopped
     environment:
-      PMA_HOST: db
+      PMA_HOSTS: db,inventory-db
       PMA_USER: root
       PMA_PASSWORD: root
     ports:
-      - "8080:80"
+      - "${PMA_PORT:-8080}:80"
     depends_on:
       db:
         condition: service_healthy
+      inventory-db:
+        condition: service_healthy
+
+  inventory-tests:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: ECInventory/Dockerfile
+      target: build
+    working_dir: /src
+    environment:
+      DB_HOST: inventory-db
+      DB_PORT: 3306
+      DB_USER: inventory
+      DB_PASSWORD: secret
+      DB_NAME: inventory
+    command: ["go", "test", "-tags", "integration", "-count=1", "-v", "./tests/integration/..."]
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+
+  k6:
+    profiles: ["tools"]
+    image: grafana/k6:0.54.0
+    volumes:
+      - ./loadtest:/scripts:ro
+      - ./loadtest/results:/results
+    environment:
+      BASE_URL: http://app:8000
+    depends_on:
+      app:
+        condition: service_started
+    entrypoint: ["k6"]
+
 volumes:
+  replica_data:
   db_data:
   inventory_db_data:
   product_images:

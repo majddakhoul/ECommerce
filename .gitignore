@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+node_modules/
+vendor/
+gen/
+bin/
+FReq_02_03/loadtest/results/*.json

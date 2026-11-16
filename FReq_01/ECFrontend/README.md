@@ -1,14 +1,20 @@
 # ECommerce Flutter Client
 
-> Part of the [ECommerce](../README.md) project. The API it talks to lives in [`ECBackend`](../ECBackend/README.md).
+> Requirement 1 of the [ECommerce](../../README.md) repository ([FReq_01](../README.md)). The API it talks to lives in [`ECBackend`](../ECBackend/README.md). Requirements 2 and 3 keep the same response format on `/api/v2` and `/api/v3`, served by [`FReq_02_03/ECBackend`](../../FReq_02_03/ECBackend/README.md).
 
 <p align="center">
-<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter" alt="Flutter 3.44">
-<img src="https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart" alt="Dart 3.12">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44">
+<img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT">
+<img src="https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart&logoColor=white" alt="Dart 3.12">
 <img src="https://img.shields.io/badge/State-Cubit%20%2F%20BLoC-5B2EFF" alt="Cubit / BLoC">
 <img src="https://img.shields.io/badge/HTTP-Dio-0F9D58" alt="Dio">
-<img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
+
+[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md)
 
 ---
 
