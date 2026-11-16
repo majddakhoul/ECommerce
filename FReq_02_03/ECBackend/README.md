@@ -1,20 +1,26 @@
 # ECommerce Backend API
 
-> Part of the [ECommerce](../../README.md) repository, requirements 2 and 3 ([FReq_02_03](../README.md)). Stock is owned by the Go [`ECInventory`](../ECInventory/README.md) service, which this API calls over gRPC. The mobile client lives in [`ECFrontend`](../../FReq_01/ECFrontend/README.md). See also: [documentation index](../docs/README.md), [architecture](../docs/architecture.md), [testing](../docs/testing.md), [security](../docs/security.md), [measurements](../PERFORMANCE.md).
+> Part of the [ECommerce](../../README.md) repository, requirements 2 and 3 ([FReq_02_03](../README.md)). Stock is owned by the Go [`ECInventory`](../ECInventory/README.md) service, which this API calls over gRPC. Requirement 1 is documented in [`FReq_01/ECBackend`](../../FReq_01/ECBackend/README.md), and its mobile client in [`ECFrontend`](../../FReq_01/ECFrontend/README.md). See also: [documentation index](../docs/README.md), [architecture](../docs/architecture.md), [testing](../docs/testing.md), [security](../docs/security.md), [measurements](../PERFORMANCE.md).
 
 <p align="center">
 <img src="https://laravel.com/img/logomark.min.svg" height="80" alt="Laravel">
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?logo=laravel" alt="Laravel 12.x">
-<img src="https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php" alt="PHP 8.2+">
-<img src="https://img.shields.io/badge/MySQL-8.x-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.x">
-<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT Auth">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44">
+<img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT">
+<img src="https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
 <img src="https://img.shields.io/badge/Spatie-laravel--permission-6B46C1" alt="Spatie Laravel Permission">
 <img src="https://img.shields.io/badge/PHPUnit-11-366488?logo=php&logoColor=white" alt="PHPUnit 11">
-<img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+<img src="https://img.shields.io/badge/gRPC-inventory.v1-244C5A?logo=grpc&logoColor=white" alt="gRPC">
+<img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis 7">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
+
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md)
 
 ---
 
