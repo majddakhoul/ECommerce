@@ -2,7 +2,22 @@
 
 > Part of the [ECommerce](../../README.md) repository, requirements 2 and 3 ([FReq_02_03](../README.md)). This folder holds the single contract that the Laravel API ([`ECBackend`](../ECBackend/README.md)) and the Go service ([`ECInventory`](../ECInventory/README.md)) both depend on.
 
+<p align="center">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
+<img src="https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44">
+<img src="https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/JWT-auth-000000?logo=JSON%20web%20tokens" alt="JWT">
+<img src="https://img.shields.io/badge/protobuf-3-4285F4" alt="protobuf 3">
+<img src="https://img.shields.io/badge/gRPC-inventory.v1-244C5A?logo=grpc&logoColor=white" alt="gRPC">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+</p>
+
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md)
+
 `inventory.proto` defines the package `inventory.v1`. Both sides generate their code from this one file, so they cannot drift apart.
+
+---
 
 ## Calls
 
@@ -19,9 +34,13 @@
 
 A shortage carries `product_id`, `requested`, `available` and a reason, `INSUFFICIENT_STOCK` or `PRODUCT_NOT_FOUND`.
 
+---
+
 ## Metadata
 
 Every call except `Ping` must carry the header `x-api-key` with the shared secret. Without it the server answers `UNAUTHENTICATED`.
+
+---
 
 ## Status codes
 
@@ -35,12 +54,16 @@ Every call except `Ping` must carry the header `x-api-key` with the shared secre
 
 Laravel logs every failure with the call name and the code. An insufficient quantity is not a status: `ReserveStock` answers `reserved = false`, which Laravel turns into HTTP 409.
 
+---
+
 ## How each side uses the file
 
 | Side | Usage |
 |---|---|
 | Go | The Docker build runs `protoc` with `protoc-gen-go` and `protoc-gen-go-grpc` and writes `ECInventory/gen/inventorypb`. The option `go_package` points to that path. |
 | Laravel | The classes in `ECBackend/app/Grpc` were generated from the same file with `protoc` (`php_namespace` and `php_metadata_namespace` set in the file), and `GrpcInventoryGateway` calls them. |
+
+---
 
 ## Changing the contract
 
@@ -49,3 +72,9 @@ Laravel logs every failure with the call name and the code. An insufficient quan
 3. Update the handlers in `ECInventory/internal/transport/grpcapi` and the service layer if the behaviour changes.
 4. Run `go test ./internal/...` in `ECInventory` and `php artisan test` in `ECBackend`.
 5. Commit the contract, the generated PHP classes and both implementations together, so the two services never disagree.
+
+---
+
+## License
+
+This project is released under the [MIT License](../../LICENSE). Copyright (c) 2026 Majd AlDakhoul.
