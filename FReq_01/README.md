@@ -9,7 +9,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-A full-stack e-commerce application built for the Web Applications course at Damascus University: a Laravel 12 REST API and a Flutter mobile client that consumes every endpoint of it.
+[Repository](../README.md) · [Requirement 1](README.md) · [Requirements 2 and 3](../FReq_02_03/README.md)
+
+Requirement 1 of the ECommerce project, built for the Web Applications course at Damascus University: a Laravel 12 REST API and a Flutter mobile client that consumes every endpoint of it.
 
 [Backend documentation](ECBackend/README.md) · [Frontend documentation](ECFrontend/README.md) · [Postman collection](ECBackend/postman/ECommerce.postman_collection.json)
 
@@ -22,6 +24,7 @@ A full-stack e-commerce application built for the Web Applications course at Dam
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Demo Accounts](#demo-accounts)
+- [Requirements 2 and 3](#requirements-2-and-3)
 - [Branches](#branches)
 - [Tech Stack](#tech-stack)
 - [License](#license)
@@ -31,12 +34,14 @@ A full-stack e-commerce application built for the Web Applications course at Dam
 ## Repository Layout
 
 ```text
-ECommerce/
+FReq_01/
 ├── ECBackend/     Laravel 12 REST API (JWT, roles, products, cart, orders, emails, Docker)
 ├── ECFrontend/    Flutter client (Cubit / BLoC, Dio)
 ├── LICENSE        MIT
 └── README.md      this file
 ```
+
+This folder is requirement 1 of the [ECommerce](../README.md) repository. Requirements 2 and 3 live in [FReq_02_03](../FReq_02_03/README.md).
 
 | Folder | What it is | Documentation |
 |---|---|---|
@@ -125,12 +130,25 @@ Skip the `--dart-define` flag on an emulator, Chrome, or Windows if you use the 
 
 ---
 
+## Requirements 2 and 3
+
+Requirements 2 and 3 extend this API in [FReq_02_03](../FReq_02_03/README.md) without changing its contract.
+
+| Requirement | What it adds | Documentation |
+|---|---|---|
+| 2. Communication between services | Stock moves to an independent Go service reached over gRPC, with atomic reservation, `409` for insufficient stock and `503` when the service is down | [FReq_02_03/README.md](../FReq_02_03/README.md#requirement-2---communication-between-services), [ECInventory](../FReq_02_03/ECInventory/README.md) |
+| 3. Performance and caching | Redis cache, `ETag`, FULLTEXT search, indexes, read replica and k6 measurements, on the `/api/v3` routes | [FReq_02_03/README.md](../FReq_02_03/README.md#requirement-3---performance-and-caching), [PERFORMANCE.md](../FReq_02_03/PERFORMANCE.md) |
+
+The routes `/api/v2` and `/api/v3` keep the response format of `/api/v1`, so this client is designed to work against them. It has not been retested against them. The backend of the later requirements is documented in [FReq_02_03/ECBackend/README.md](../FReq_02_03/ECBackend/README.md).
+
+---
+
 ## Branches
 
 | Branch | Purpose |
 |---|---|
-| `master` | Stable backend |
-| `checkout` | Cart, orders, notifications, and the Flutter client |
+| `master` | Stable branch |
+| `checkout` | Working branch with all three requirements, merged into `master` through a pull request |
 
 ---
 
