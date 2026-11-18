@@ -13,7 +13,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md)
+
+Requirement 4 adds an optional metadata header and an event contract, see [FReq_04/proto/README.md](../../FReq_04/proto/README.md).
 
 `inventory.proto` defines the package `inventory.v1`. Both sides generate their code from this one file, so they cannot drift apart.
 

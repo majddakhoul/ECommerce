@@ -12,7 +12,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md)
+
+The sync against async measurement of requirement 4 is in [FReq_04/loadtest/README.md](../../FReq_04/loadtest/README.md).
 
 k6 scripts for requirements 2 and 3. Run them from the `FReq_02_03` folder, so the script paths resolve.
 

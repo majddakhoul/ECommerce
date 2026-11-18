@@ -13,7 +13,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](README.md)
+[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](README.md) · [Requirement 4](../FReq_04/README.md)
 
 Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../FReq_01/README.md). This folder holds requirements 2 and 3 together, because requirement 3 builds directly on the service split of requirement 2: one platform, one Laravel API with the routes `/api/v1`, `/api/v2` and `/api/v3`, and one Go inventory service.
 
@@ -30,6 +30,7 @@ Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../
 - [Requirement 2 - Communication between services](#requirement-2---communication-between-services)
 - [Requirement 3 - Performance and caching](#requirement-3---performance-and-caching)
 - [How the Two Requirements Connect](#how-the-two-requirements-connect)
+- [Requirement 4](#requirement-4)
 - [Verification Status](#verification-status)
 - [Tech Stack](#tech-stack)
 - [License](#license)
@@ -192,6 +193,16 @@ Measured on the local set-up (file cache, no replica): search 43.9 times faster 
 - The stock is never cached, so requirement 3 reuses the gRPC calls of requirement 2 (`GetStocks` for every list page) and stays correct.
 - An order changes stock only, so it does not invalidate the product cache.
 - `/api/v2` is the baseline that `/api/v3` is measured against, on the same data.
+
+---
+
+## Requirement 4
+
+[FReq_04](../FReq_04/README.md) builds on this platform. It keeps `/api/v1` to `/api/v3`, the Go inventory service and its contract, and adds two paths over the same controllers: `/api/v4/sync` as the baseline and `/api/v4/async` with RabbitMQ jobs and Reverb events.
+
+- The inventory service gains one optional behaviour: it publishes `stock.changed` to RabbitMQ when a call carries the metadata `x-publish-events: 1`. Calls without it behave exactly as described here. See [FReq_04/ECInventory/README.md](../FReq_04/ECInventory/README.md#stock-events).
+- The v4 catalog does not use the cache of requirement 3, because live quantities must never be served stale.
+- Both stacks use the same host ports (8000, 3307, 3308, 6379, 8080, 50051), so run only one compose project at a time.
 
 ---
 
