@@ -1,0 +1,269 @@
+x-backend: &backend
+  build:
+    context: ./ECBackend
+  restart: unless-stopped
+  environment: &backend-env
+    APP_NAME: ECommerce
+    APP_ENV: local
+    APP_DEBUG: "true"
+    APP_KEY: ${APP_KEY:?copy .env.example to .env first}
+    APP_URL: http://localhost:${APP_PORT:-8000}
+    JWT_SECRET: ${JWT_SECRET:?copy .env.example to .env first}
+    DB_CONNECTION: mysql
+    DB_HOST: db
+    DB_PORT: 3306
+    DB_DATABASE: ecommerce
+    DB_USERNAME: ecommerce
+    DB_PASSWORD: secret
+    CACHE_STORE: redis
+    SESSION_DRIVER: file
+    REDIS_HOST: redis
+    REDIS_CLIENT: phpredis
+    PERFORMANCE_STORE: redis
+    PERF_REPLICA_ENABLED: "false"
+    API_RATE_LIMIT: ${API_RATE_LIMIT:-1000000}
+    QUEUE_CONNECTION: rabbitmq
+    RABBITMQ_HOST: rabbitmq
+    RABBITMQ_PORT: 5672
+    RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+    RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+    RABBITMQ_VHOST: /
+    BROADCAST_CONNECTION: reverb
+    REVERB_APP_ID: ${REVERB_APP_ID:-ecommerce}
+    REVERB_APP_KEY: ${REVERB_APP_KEY:?copy .env.example to .env first}
+    REVERB_APP_SECRET: ${REVERB_APP_SECRET:?copy .env.example to .env first}
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    REVERB_SERVER_HOST: 0.0.0.0
+    REVERB_SERVER_PORT: 8080
+    REVERB_ALLOWED_ORIGINS: localhost,127.0.0.1
+    CORS_ALLOWED_ORIGINS: http://localhost:${WEB_PORT:-5173},http://127.0.0.1:${WEB_PORT:-5173}
+    MAIL_MAILER: ${MAIL_MAILER:-log}
+    INVENTORY_GRPC_HOST: inventory-service
+    INVENTORY_GRPC_PORT: 50051
+    INVENTORY_API_KEY: ${INVENTORY_API_KEY:-change-me}
+    INVENTORY_GRPC_TIMEOUT: 2
+  volumes:
+    - product_images:/var/www/html/storage/app/public
+
+services:
+  app:
+    <<: *backend
+    container_name: ec4_app
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      <<: *backend-env
+      CONTAINER_ROLE: app
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8000) ? 0 : 1);"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+
+  worker:
+    <<: *backend
+    container_name: ec4_worker
+    environment:
+      <<: *backend-env
+      CONTAINER_ROLE: worker
+    depends_on:
+      app:
+        condition: service_healthy
+
+  consumer:
+    <<: *backend
+    container_name: ec4_consumer
+    environment:
+      <<: *backend-env
+      CONTAINER_ROLE: consumer
+    depends_on:
+      app:
+        condition: service_healthy
+      reverb:
+        condition: service_started
+
+  reverb:
+    <<: *backend
+    container_name: ec4_reverb
+    environment:
+      <<: *backend-env
+      CONTAINER_ROLE: reverb
+    ports:
+      - "${REVERB_PORT:-8080}:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./ECWeb
+      args:
+        VITE_API_URL: http://localhost:${APP_PORT:-8000}
+        VITE_API_MODE: ${WEB_API_MODE:-async}
+        VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:?copy .env.example to .env first}
+        VITE_REVERB_HOST: localhost
+        VITE_REVERB_PORT: ${REVERB_PORT:-8080}
+        VITE_REVERB_SCHEME: http
+    container_name: ec4_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ec4_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_UI_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 15s
+
+  db:
+    image: mysql:8.0
+    container_name: ec4_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: ecommerce
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "${ECOMMERCE_DB_PORT:-3307}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: ec4_redis
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "volatile-lru", "--save", ""]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: ECInventory/Dockerfile
+    container_name: ec4_inventory
+    restart: unless-stopped
+    environment:
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50051
+      INVENTORY_API_KEY: ${INVENTORY_API_KEY:-change-me}
+      DB_HOST: inventory-db
+      DB_PORT: 3306
+      DB_USER: inventory
+      DB_PASSWORD: secret
+      DB_NAME: inventory
+      DB_MAX_OPEN_CONNS: 25
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${INVENTORY_PORT:-50051}:50051"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  inventory-db:
+    image: mysql:8.0
+    container_name: ec4_inventory_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: inventory
+      MYSQL_USER: inventory
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "${INVENTORY_DB_PORT:-3308}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - inventory_db_data:/var/lib/mysql
+
+  mailpit:
+    profiles: ["mail"]
+    image: axllent/mailpit:v1.20
+    container_name: ec4_mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "1025:1025"
+
+  inventory-tests:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: ECInventory/Dockerfile
+      target: build
+    working_dir: /src
+    environment:
+      DB_HOST: inventory-db
+      DB_PORT: 3306
+      DB_USER: inventory
+      DB_PASSWORD: secret
+      DB_NAME: inventory
+    command: ["go", "test", "-tags", "integration", "-count=1", "-v", "./tests/integration/..."]
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+
+  k6:
+    profiles: ["tools"]
+    image: grafana/k6:0.54.0
+    volumes:
+      - ./loadtest:/scripts:ro
+      - ./loadtest/results:/results
+    environment:
+      BASE_URL: http://app:8000
+    depends_on:
+      app:
+        condition: service_healthy
+    entrypoint: ["k6"]
+
+volumes:
+  db_data:
+  inventory_db_data:
+  rabbitmq_data:
+  product_images:
