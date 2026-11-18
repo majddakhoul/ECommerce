@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package inventory.v1;
+
+option go_package = "ecinventory/gen/inventorypb";
+option php_namespace = "App\\Grpc\\Inventory";
+option php_metadata_namespace = "App\\Grpc\\Metadata";
+
+service InventoryService {
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc GetStock(GetStockRequest) returns (GetStockResponse);
+  rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
+  rpc ListAvailableProductIds(ListAvailableProductIdsRequest) returns (ListAvailableProductIdsResponse);
+  rpc SetStock(SetStockRequest) returns (SetStockResponse);
+  rpc DeleteStock(DeleteStockRequest) returns (DeleteStockResponse);
+  rpc ReserveStock(ReserveStockRequest) returns (ReserveStockResponse);
+  rpc ReleaseStock(ReleaseStockRequest) returns (ReleaseStockResponse);
+}
+
+message PingRequest {}
+
+message PingResponse {
+  bool ok = 1;
+}
+
+message GetStockRequest {
+  int64 product_id = 1;
+}
+
+message GetStockResponse {
+  bool found = 1;
+  int64 stock = 2;
+}
+
+message GetStocksRequest {
+  repeated int64 product_ids = 1;
+}
+
+message StockLevel {
+  int64 product_id = 1;
+  int64 stock = 2;
+}
+
+message GetStocksResponse {
+  repeated StockLevel levels = 1;
+}
+
+message ListAvailableProductIdsRequest {}
+
+message ListAvailableProductIdsResponse {
+  repeated int64 product_ids = 1;
+}
+
+message SetStockRequest {
+  int64 product_id = 1;
+  int64 stock = 2;
+}
+
+message SetStockResponse {
+  int64 stock = 1;
+}
+
+message DeleteStockRequest {
+  int64 product_id = 1;
+}
+
+message DeleteStockResponse {
+  bool deleted = 1;
+}
+
+message ReservationItem {
+  int64 product_id = 1;
+  int64 quantity = 2;
+}
+
+message ReserveStockRequest {
+  string reservation_id = 1;
+  repeated ReservationItem items = 2;
+}
+
+enum ShortageReason {
+  SHORTAGE_REASON_UNSPECIFIED = 0;
+  INSUFFICIENT_STOCK = 1;
+  PRODUCT_NOT_FOUND = 2;
+}
+
+message StockShortage {
+  int64 product_id = 1;
+  int64 requested = 2;
+  int64 available = 3;
+  ShortageReason reason = 4;
+}
+
+message ReserveStockResponse {
+  bool reserved = 1;
+  string reservation_id = 2;
+  repeated StockShortage shortages = 3;
+}
+
+message ReleaseStockRequest {
+  string reservation_id = 1;
+}
+
+message ReleaseStockResponse {
+  bool released = 1;
+  int64 items_released = 2;
+}
