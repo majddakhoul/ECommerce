@@ -9,7 +9,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../README.md) · [Requirement 1](README.md) · [Requirements 2 and 3](../FReq_02_03/README.md)
+[Repository](../README.md) · [Requirement 1](README.md) · [Requirements 2 and 3](../FReq_02_03/README.md) · [Requirement 4](../FReq_04/README.md)
 
 Requirement 1 of the ECommerce project, built for the Web Applications course at Damascus University: a Laravel 12 REST API and a Flutter mobile client that consumes every endpoint of it.
 
@@ -25,6 +25,7 @@ Requirement 1 of the ECommerce project, built for the Web Applications course at
 - [Quick Start](#quick-start)
 - [Demo Accounts](#demo-accounts)
 - [Requirements 2 and 3](#requirements-2-and-3)
+- [Requirement 4](#requirement-4)
 - [Branches](#branches)
 - [Tech Stack](#tech-stack)
 - [License](#license)
@@ -140,6 +141,20 @@ Requirements 2 and 3 extend this API in [FReq_02_03](../FReq_02_03/README.md) wi
 | 3. Performance and caching | Redis cache, `ETag`, FULLTEXT search, indexes, read replica and k6 measurements, on the `/api/v3` routes | [FReq_02_03/README.md](../FReq_02_03/README.md#requirement-3---performance-and-caching), [PERFORMANCE.md](../FReq_02_03/PERFORMANCE.md) |
 
 The routes `/api/v2` and `/api/v3` keep the response format of `/api/v1`, so this client is designed to work against them. It has not been retested against them. The backend of the later requirements is documented in [FReq_02_03/ECBackend/README.md](../FReq_02_03/ECBackend/README.md).
+
+---
+
+## Requirement 4
+
+Requirement 4 adds asynchronous queues and real-time updates in [FReq_04](../FReq_04/README.md), again without changing this contract: the routes `/api/v1` to `/api/v3` stay as they are.
+
+| What it adds | Documentation |
+|---|---|
+| The paths `/api/v4/sync` and `/api/v4/async` over the same controllers, with RabbitMQ jobs and retries on the async path | [FReq_04/README.md](../FReq_04/README.md#sync-and-async-paths), [reliability.md](../FReq_04/docs/reliability.md) |
+| Live products, stock, cart and orders through Laravel Reverb, with private channels authorized by the same JWT | [realtime.md](../FReq_04/docs/realtime.md), [architecture.md](../FReq_04/docs/architecture.md) |
+| A React web client with an administrator dashboard that uses every endpoint of this API | [ECWeb/README.md](../FReq_04/ECWeb/README.md) |
+
+The Flutter client of this requirement is unchanged and is not connected to the real-time channels.
 
 ---
 

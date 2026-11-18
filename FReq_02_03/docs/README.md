@@ -15,7 +15,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md)
+
+Requirement 4 builds on this platform and has its own [documentation index](../../FReq_04/docs/README.md).
 
 This folder holds the cross-cutting documentation. Each component also has its own README next to its code.
 
