@@ -18,7 +18,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md)
+[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../../FReq_04/README.md)
+
+Requirement 4 serves this API under `/api/v4/sync` and `/api/v4/async`, see [FReq_04/ECBackend/README.md](../../FReq_04/ECBackend/README.md).
 
 ---
 

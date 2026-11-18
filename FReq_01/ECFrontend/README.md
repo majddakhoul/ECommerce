@@ -14,7 +14,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md)
+[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../../FReq_04/README.md)
+
+The React web client of requirement 4 consumes the same API, see [FReq_04/ECWeb/README.md](../../FReq_04/ECWeb/README.md).
 
 ---
 
