@@ -9,7 +9,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../README.md) · [Requirement 1](README.md) · [Requirements 2 and 3](../FReq_02_03/README.md) · [Requirement 4](../FReq_04/README.md)
+[Repository](../README.md) · [Requirement 1](README.md) · [Requirements 2 and 3](../FReq_02_03/README.md) · [Requirement 4](../FReq_04/README.md) · [Requirement 5](../FReq_05/README.md) · [Documentation hub](../docs/README.md)
 
 Requirement 1 of the ECommerce project, built for the Web Applications course at Damascus University: a Laravel 12 REST API and a Flutter mobile client that consumes every endpoint of it.
 
@@ -26,7 +26,7 @@ Requirement 1 of the ECommerce project, built for the Web Applications course at
 - [Demo Accounts](#demo-accounts)
 - [Requirements 2 and 3](#requirements-2-and-3)
 - [Requirement 4](#requirement-4)
-- [Branches](#branches)
+- [Requirement 5](#requirement-5)
 - [Tech Stack](#tech-stack)
 - [License](#license)
 
@@ -158,12 +158,9 @@ The Flutter client of this requirement is unchanged and is not connected to the 
 
 ---
 
-## Branches
+## Requirement 5
 
-| Branch | Purpose |
-|---|---|
-| `master` | Stable branch |
-| `checkout` | Working branch with all three requirements, merged into `master` through a pull request |
+[FReq_05](../FReq_05/README.md) runs the same API as three instances behind an nginx load balancer, with the cart, the cache and the locks in one shared Redis. The contract of this requirement is unchanged. A token issued by one instance is valid on all of them because they share the JWT secret, and the cart written through one instance is read through another. See [scaling.md](../FReq_05/docs/scaling.md).
 
 ---
 

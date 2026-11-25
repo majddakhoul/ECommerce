@@ -14,7 +14,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../../FReq_04/README.md)
+[Repository](../../README.md) · [Requirement 1](../README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../../FReq_04/README.md) · [Requirement 5](../../FReq_05/README.md)
 
 The React web client of requirement 4 consumes the same API, see [FReq_04/ECWeb/README.md](../../FReq_04/ECWeb/README.md).
 
@@ -77,9 +77,9 @@ The palette follows the reference mock-up: an indigo background, a lavender acce
 ## Architecture
 
 ```text
-Page → Cubit → Dio client → API
+Page -> Cubit -> Dio client -> API
           │
-        State → BlocBuilder / BlocConsumer → Widgets
+        State -> BlocBuilder / BlocConsumer -> Widgets
 ```
 
 Each feature owns its `bloc/cubit`, `bloc/state`, `model`, pages, and widgets. Cubits return plain states, so screens only render states and never talk to the network. The Dio interceptor adds the bearer token to every request and, on a `401`, clears the token and broadcasts a logout event that sends the user back to the login screen.
