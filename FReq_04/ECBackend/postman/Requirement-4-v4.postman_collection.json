@@ -2,7 +2,7 @@
   "info": {
     "name": "ECommerce - Requirement 4 (v4)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Fourth requirement API. Base paths /api/v4/sync and /api/v4/async share the same controllers and response shapes. Set the collection variable mode to sync or async.\nasync queues mails on RabbitMQ and broadcasts live events through Reverb. sync does neither.\nRun a Login request first with admin@example.com."
+    "description": "Fourth requirement API. Base paths /api/v4/sync and /api/v4/async share the same controllers and response shapes. Set the collection variable mode to sync or async.\nasync queues mails on RabbitMQ and broadcasts live events through Reverb. sync does neither.\nRun 02. Login (admin) first. Login requests store adminToken and userToken, and the last login also sets token, which authorizes every other request. Every response is checked for the X-Processing-Mode header and for a non-5xx status."
   },
   "item": [
     {
@@ -112,8 +112,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
+                  "pm.test('logged in', () => pm.response.to.have.status(200));",
                   "if (json.data && json.data.access_token) {",
                   "    pm.collectionVariables.set('token', json.data.access_token);",
+                  "    pm.collectionVariables.set('adminToken', json.data.access_token);",
                   "}"
                 ]
               }
@@ -167,8 +169,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
+                  "pm.test('logged in', () => pm.response.to.have.status(200));",
                   "if (json.data && json.data.access_token) {",
                   "    pm.collectionVariables.set('token', json.data.access_token);",
+                  "    pm.collectionVariables.set('userToken', json.data.access_token);",
                   "}"
                 ]
               }
@@ -856,7 +860,19 @@
               ]
             },
             "description": "Any logged-in user. Filters: search, category, in_stock, per_page."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('products listed', () => pm.response.to.have.status(200));",
+                  "pm.test('response has data', () => pm.expect(pm.response.json()).to.have.property('data'));"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "24. List categories",
@@ -1080,7 +1096,19 @@
               ]
             },
             "description": "Current user cart with totals. The cart is stored in the application cache for 7 days."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('cart returned', () => pm.response.to.have.status(200));",
+                  "pm.test('cart has totals', () => pm.expect(pm.response.json().data).to.have.property('total_quantity'));"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "30. Add item to cart",
@@ -1119,7 +1147,18 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('item added', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "31. Update cart item quantity",
@@ -1317,7 +1356,18 @@
               ]
             },
             "description": "Orders of the current user only."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('orders listed', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "37. Place order",
@@ -1682,6 +1732,308 @@
               }
             }
           }
+        },
+        {
+          "name": "06. Broadcast auth - admin channel as admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/broadcasting/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "broadcasting",
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socket_id\": \"123.456\",\n  \"channel_name\": \"private-orders.admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Run 02. Login (admin) first. Expected 200 with an auth signature."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('adminToken') });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('administrator may listen', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07. Broadcast auth - admin channel as user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/broadcasting/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "broadcasting",
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socket_id\": \"123.456\",\n  \"channel_name\": \"private-orders.admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Run 03. Login (user) first. A regular user must be refused."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('userToken') });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('user is refused', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08. RabbitMQ - emails queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{rabbitUrl}}/api/queues/%2F/emails"
+            },
+            "description": "RabbitMQ management API. Needs the stack to be running. consumers is the number of workers reading the queue.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('queue exists', () => pm.response.to.have.status(200));",
+                  "pm.test('a worker is consuming', () => pm.expect(pm.response.json().consumers).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09. RabbitMQ - broadcasts queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{rabbitUrl}}/api/queues/%2F/broadcasts"
+            },
+            "description": "Same check for the broadcasts queue.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('queue exists', () => pm.response.to.have.status(200));",
+                  "pm.test('a worker is consuming', () => pm.expect(pm.response.json().consumers).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. RabbitMQ - stock events queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{rabbitUrl}}/api/queues/%2F/ec.stock.changed"
+            },
+            "description": "The queue filled by the inventory service. consumers should be 1 while inventory:consume runs.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('queue exists', () => pm.response.to.have.status(200));",
+                  "pm.test('the consumer is attached', () => pm.expect(pm.response.json().consumers).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11. RabbitMQ - stock events dead letter queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{rabbitUrl}}/api/queues/%2F/ec.stock.changed.dlq"
+            },
+            "description": "Holds stock events that failed after all attempts or were malformed. Normally empty.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('queue exists', () => pm.response.to.have.status(200));",
+                  "pm.test('nothing was dead lettered', () => pm.expect(pm.response.json().messages).to.eql(0));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
@@ -1706,6 +2058,26 @@
     {
       "key": "lastOrderId",
       "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "userToken",
+      "value": ""
+    },
+    {
+      "key": "rabbitUrl",
+      "value": "http://localhost:15672"
+    },
+    {
+      "key": "rabbitUser",
+      "value": "guest"
+    },
+    {
+      "key": "rabbitPassword",
+      "value": "guest"
     }
   ],
   "auth": {
@@ -1717,5 +2089,20 @@
         "type": "string"
       }
     ]
-  }
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+          "const mode = pm.collectionVariables.get('mode');",
+          "if (pm.request.url.getPath().indexOf('/api/v4/') === 0) {",
+          "    pm.test('processing mode header matches the path', () => pm.expect(pm.response.headers.get('X-Processing-Mode')).to.eql(mode));",
+          "}"
+        ]
+      }
+    }
+  ]
 }
