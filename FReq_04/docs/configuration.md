@@ -12,7 +12,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md) · [Requirement 5](../../FReq_05/README.md)
 
 [Documentation index](README.md) · [Architecture](architecture.md) · [Realtime](realtime.md) · [Reliability](reliability.md) · [Configuration](configuration.md) · [Docker](docker.md) · [Local set-up](local-setup.md) · [Testing](testing.md) · [Security](security.md) · [Compliance](compliance.md) · [Troubleshooting](troubleshooting.md) · [Verification status](verification-status.md)
 
@@ -182,5 +182,5 @@ The Requirement 2 and 3 stack in [`FReq_02_03`](../../FReq_02_03/README.md) uses
 ## Secrets
 
 - `APP_KEY`, `JWT_SECRET`, `REVERB_APP_SECRET`, `MAIL_PASSWORD` and `INVENTORY_API_KEY` are secrets. Generate new values per environment.
-- A value that was ever pasted into a chat, an issue or a commit is compromised. Rotate it: new application key, new JWT secret, new Gmail App Password.
+- A value that was ever shared or committed is compromised. Rotate it: new application key, new JWT secret, new mail app password.
 - `.gitignore` excludes `.env` and `.env.*` except `.env.example`. Check `git status` before every commit.

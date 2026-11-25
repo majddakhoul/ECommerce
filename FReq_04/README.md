@@ -15,7 +15,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](../FReq_02_03/README.md) · [Requirement 4](README.md)
+[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](../FReq_02_03/README.md) · [Requirement 4](README.md) · [Requirement 5](../FReq_05/README.md) · [Documentation hub](../docs/README.md)
 
 Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../FReq_01/README.md). Requirements 2 and 3 are [FReq_02_03](../FReq_02_03/README.md). This folder holds requirement 4, asynchronous queues and real-time updates, built on top of the platform of requirements 2 and 3: one Laravel API with the routes `/api/v1` to `/api/v4`, one Go inventory service, and a new React web client.
 
@@ -186,6 +186,7 @@ A React 18 and TypeScript client with a Domain, Data, Presentation and Services 
 - Requirement 2 made the Go service the owner of stock. Requirement 4 lets that owner announce every change, so any client sees the truth without polling.
 - Requirement 3 cached the catalog. The v4 catalog skips that cache, because live quantities must never be served stale.
 - `/api/v4/sync` behaves like the earlier versions and is the baseline that `/api/v4/async` is measured against.
+- [FReq_05](../FReq_05/README.md) runs this platform as three Laravel instances behind nginx. It needs no change to the routes of this requirement, and it adds locks so that the jobs and the cart behave when several instances run at once, see [scaling.md](../FReq_05/docs/scaling.md).
 
 ---
 

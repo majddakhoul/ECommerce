@@ -14,7 +14,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md) · [Requirement 5](../../FReq_05/README.md)
 
 [Documentation index](../docs/README.md) · [Architecture](../docs/architecture.md) · [Realtime](../docs/realtime.md) · [Reliability](../docs/reliability.md) · [Configuration](../docs/configuration.md) · [Docker](../docs/docker.md) · [Local set-up](../docs/local-setup.md) · [Testing](../docs/testing.md) · [Security](../docs/security.md) · [Compliance](../docs/compliance.md) · [Troubleshooting](../docs/troubleshooting.md) · [Verification status](../docs/verification-status.md)
 
@@ -728,7 +728,7 @@ Four ready-to-import collections live in [`postman/`](postman):
 | [`Requirement-3-v3.postman_collection.json`](postman/Requirement-3-v3.postman_collection.json) | `/api/v3` | The same requests plus the performance lab and the optimized catalog |
 | [`Requirement-4-v4.postman_collection.json`](postman/Requirement-4-v4.postman_collection.json) | `/api/v4/{mode}` | Auth, users, roles, products, cart, orders, and the folder `Requirement 4 - Async and real-time` |
 
-Set the collection variable `mode` to `sync` or `async`. Log in once with a demo account and a collection script stores the JWT in `token`. The folder `Requirement 4 - Async and real-time` checks the mode header, places an order for a timing comparison, and tests broadcast authorization for the own, the admin and a foreign channel.
+Set the collection variable `mode` to `sync` or `async`. Log in once with a demo account and a collection script stores the JWT in `token`. The folder `Requirement 4 - Async and real-time` checks the mode header, places an order for a timing comparison, and tests broadcast authorization for the own, the admin and a foreign channel, and reads the RabbitMQ queues through the management API (`rabbitUrl`, `rabbitUser`, `rabbitPassword`). Login requests also store `adminToken` and `userToken`.
 
 ---
 

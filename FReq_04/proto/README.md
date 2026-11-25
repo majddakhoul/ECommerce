@@ -11,7 +11,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md) · [Requirement 5](../../FReq_05/README.md)
 
 `inventory.proto` defines the package `inventory.v1`. It is unchanged from requirements 2 and 3 ([contract description](../../FReq_02_03/proto/README.md)). Requirement 4 adds no call and no field. It adds a metadata header and a message that is not part of the proto file.
 

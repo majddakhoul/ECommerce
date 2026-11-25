@@ -14,14 +14,14 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../../FReq_02_03/README.md) · [Requirement 4](../README.md) · [Requirement 5](../../FReq_05/README.md)
 
 [Documentation index](README.md) · [Architecture](architecture.md) · [Realtime](realtime.md) · [Reliability](reliability.md) · [Configuration](configuration.md) · [Docker](docker.md) · [Local set-up](local-setup.md) · [Testing](testing.md) · [Security](security.md) · [Compliance](compliance.md) · [Troubleshooting](troubleshooting.md) · [Verification status](verification-status.md)
 
 ## Secrets
 
 - `.env` files are not committed. The repository holds only `.env.example` files with empty or development values.
-- Rotate any secret that was ever pasted into a chat, a ticket or a commit: the Gmail app password, `APP_KEY`, `JWT_SECRET`. Rotation was recommended and has to be done by the owner of the accounts.
+- Rotate any secret that was ever shared or committed: the mail app password, `APP_KEY`, `JWT_SECRET`. Rotation was recommended and has to be done by the owner of the accounts.
 - `REVERB_APP_SECRET` signs the publish calls from Laravel to Reverb and the private channel authorizations. `REVERB_APP_KEY` is public by design, it ends up in the browser bundle.
 - The default RabbitMQ account `guest` only works from the same host in a plain installation. In Docker it is reachable from other containers, so change `RABBITMQ_USER` and `RABBITMQ_PASSWORD` for anything beyond local development.
 

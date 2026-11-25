@@ -61,8 +61,10 @@ export default function (data) {
 }
 
 export function handleSummary(data) {
+  const published = Object.assign({}, data);
+  delete published.setup_data;
   const out = {};
-  out[`${RESULTS_DIR}/${LABEL}.json`] = JSON.stringify(data, null, 2);
+  out[`${RESULTS_DIR}/${LABEL}.json`] = JSON.stringify(published, null, 2);
   out.stdout = `${LABEL}: p50=${data.metrics.latency_place_order.values.med.toFixed(1)}ms p95=${data.metrics.latency_place_order.values['p(95)'].toFixed(1)}ms orders=${data.metrics.orders_created ? data.metrics.orders_created.values.count : 0}\n`;
   return out;
 }
