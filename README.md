@@ -14,9 +14,9 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-A full-stack e-commerce application built in four requirements for the Web Applications course at Damascus University: a Laravel 12 REST API with a Flutter client (requirement 1), an independent Go inventory service reached over gRPC (requirement 2), a measured performance and caching layer (requirement 3), and asynchronous queues with real-time updates through RabbitMQ and Laravel Reverb, with a React web client (requirement 4).
+A full-stack e-commerce application built in five requirements for the Web Applications course at Damascus University: a Laravel 12 REST API with a Flutter client (requirement 1), an independent Go inventory service reached over gRPC (requirement 2), a measured performance and caching layer (requirement 3), and asynchronous queues with real-time updates through RabbitMQ and Laravel Reverb, with a React web client (requirement 4), and horizontal scaling with three Laravel instances behind an nginx load balancer, shared state in Redis, and k6 proof of the distribution (requirement 5).
 
-[Requirement 1](FReq_01/README.md) · [Requirements 2 and 3](FReq_02_03/README.md) · [Requirement 4](FReq_04/README.md) · [Backend, requirement 1](FReq_01/ECBackend/README.md) · [Flutter client](FReq_01/ECFrontend/README.md) · [Backend, requirements 2 and 3](FReq_02_03/ECBackend/README.md) · [Inventory service](FReq_02_03/ECInventory/README.md) · [Documentation index](FReq_02_03/docs/README.md) · [Verification status](FReq_02_03/docs/verification-status.md) · [Web client](FReq_04/ECWeb/README.md) · [Requirement 4 documentation](FReq_04/docs/README.md)
+[Requirement 1](FReq_01/README.md) · [Requirements 2 and 3](FReq_02_03/README.md) · [Requirement 4](FReq_04/README.md) · [Requirement 5](FReq_05/README.md) · [Backend, requirement 1](FReq_01/ECBackend/README.md) · [Flutter client](FReq_01/ECFrontend/README.md) · [Backend, requirements 2 and 3](FReq_02_03/ECBackend/README.md) · [Inventory service](FReq_02_03/ECInventory/README.md) · [Documentation index](FReq_02_03/docs/README.md) · [Verification status](FReq_02_03/docs/verification-status.md) · [Web client](FReq_04/ECWeb/README.md) · [Requirement 4 documentation](FReq_04/docs/README.md) · [Requirement 5 documentation](FReq_05/docs/README.md) · [Scaling](FReq_05/docs/scaling.md) · [Documentation hub](docs/README.md) · [Environment setup](docs/environment-setup.md) · [Ideas and design](docs/ideas-and-design.md) · [Problems and solutions](docs/problems-and-solutions.md) · [Commands](docs/commands.md) · [Results](docs/results.md)
 
 ---
 
@@ -28,7 +28,6 @@ A full-stack e-commerce application built in four requirements for the Web Appli
 - [Quick Start](#quick-start)
 - [Demo Accounts](#demo-accounts)
 - [Documentation](#documentation)
-- [Branches](#branches)
 - [Tech Stack](#tech-stack)
 - [Repository Rules](#repository-rules)
 - [License](#license)
@@ -56,6 +55,14 @@ ECommerce/
 │   ├── proto/
 │   ├── loadtest/
 │   └── docs/
+├── FReq_05/       Requirement 5: three Laravel instances behind nginx, three workers, shared Redis, k6 distribution tests
+│   ├── ECBackend/
+│   ├── ECInventory/
+│   ├── ECWeb/
+│   ├── proto/
+│   ├── loadtest/
+│   ├── docker/nginx/
+│   └── docs/
 ├── LICENSE        MIT
 └── README.md      this file
 ```
@@ -65,6 +72,7 @@ ECommerce/
 | `FReq_01` | 1. API and security | Layered Laravel API with JWT, roles, cart, orders and emails, plus the Flutter client | [FReq_01/README.md](FReq_01/README.md) |
 | `FReq_02_03` | 2. Communication between services, 3. Performance and caching | Laravel API with v1, v2 and v3, Go inventory service, gRPC contract, Redis cache, ETag, read replica, k6 measurements, Docker platform | [FReq_02_03/README.md](FReq_02_03/README.md) |
 | `FReq_04` | 4. Asynchronous queues and real-time | Laravel API with `/api/v4/sync` and `/api/v4/async`, RabbitMQ jobs and events, Laravel Reverb WebSocket, Go service publishing `stock.changed`, React client with an admin dashboard, k6 comparison, Docker platform | [FReq_04/README.md](FReq_04/README.md) |
+| `FReq_05` | 5. Scalability and load distribution | The platform of requirement 4 as three Laravel instances and three workers behind nginx 1.30.2 (`least_conn`), one shared Redis with locks, one-shot migration, `X-Served-By`, k6 tests for 500 requests over 2 minutes and for a stopped instance, Postman collections for requirements 4 and 5 | [FReq_05/README.md](FReq_05/README.md) |
 
 ---
 
@@ -85,6 +93,15 @@ Flutter app (FReq_01/ECFrontend)
                 │
                 ▼
         Go inventory service (ECInventory) ── MySQL: stock, reservations
+```
+
+Requirement 5 runs that platform as several instances. nginx spreads the requests over three Laravel instances, three workers share the queues, and everything the instances must agree on is kept outside them:
+
+```text
+                    +--> app1 --+
+browser --> nginx --+--> app2 --+--> MySQL, Redis (cart, locks, cache), RabbitMQ, Go inventory
+                    +--> app3 --+
+RabbitMQ --> worker1, worker2, worker3
 ```
 
 Requirement 4 adds `/api/v4/sync` and `/api/v4/async`, RabbitMQ between the API, a queue worker and the Go service, and a Reverb WebSocket server to a React client:
@@ -125,6 +142,12 @@ Go inventory --stock.changed--> RabbitMQ --> Laravel consumer --> Reverb
 - Public and private channels for products, stock, carts and orders, authorized with the same JWT.
 - React client with the identity of the Flutter app, an administrator dashboard and a sync against async benchmark.
 
+**Requirement 5: Scalability and load distribution**
+- Three Laravel instances and three queue workers from one image, behind nginx 1.30.2 with `least_conn`, a health-checked start order and a one-shot migration service.
+- One Redis for the cart, the cache, the locks and the job de-duplication: a mail or a stock event is handled once even with three workers, and a cart is the same on every instance.
+- k6 tests: 500 requests over 2 minutes counted per instance, cart consistency, duplicate mail audit, and a run that stops one instance in the middle.
+- Postman collections for requirements 4 and 5, and a table of every problem met with its cause and fix.
+
 ---
 
 ## Quick Start
@@ -161,6 +184,16 @@ docker compose up --build
 
 Fill in the empty secrets in `.env` first, see [docker.md](FReq_04/docs/docker.md#start). The client is on `http://localhost:5173`. Without Docker follow [local-setup.md](FReq_04/docs/local-setup.md). The Docker stack of requirement 4 has not been executed yet.
 
+**Requirement 5 with Docker**
+
+```bash
+cd FReq_05
+cp .env.example .env
+docker compose up --build
+```
+
+Fill in the empty secrets in `.env` first, see [docker.md](FReq_05/docs/docker.md#start). The client is on `http://localhost:5173` and the API, through nginx, on `http://localhost:8000`. Run the distribution test with `docker compose --profile tools run --rm k6 run /scripts/scale.js`. The Docker stack of requirement 5 has not been executed where it was written, see [verification-status.md](FReq_05/docs/verification-status.md).
+
 **Flutter client**
 
 ```bash
@@ -182,8 +215,18 @@ flutter run --dart-define=API_BASE_URL=http://localhost:8000
 
 ## Documentation
 
+The [documentation hub](docs/README.md) is the entry point. It explains how to install every tool, how to run each requirement locally and with Docker, every command in one place, every measured result.
+
 | Question | Document |
 |---|---|
+| Where do I start? | [docs/README.md](docs/README.md) |
+| How do I install the tools? | [environment-setup.md](docs/environment-setup.md) |
+| How do I run requirement 1, 2 and 3, 4 or 5? | [requirement-1.md](docs/requirement-1.md), [requirement-2-3.md](docs/requirement-2-3.md), [requirement-4.md](docs/requirement-4.md), [requirement-5.md](docs/requirement-5.md) |
+| Which command does what? | [commands.md](docs/commands.md) |
+| What was measured and what was not? | [results.md](docs/results.md) |
+| Something failed | [troubleshooting.md](docs/troubleshooting.md) |
+| What is the idea behind each requirement? | [ideas-and-design.md](docs/ideas-and-design.md) |
+| Which problems came up and how were they fixed? | [problems-and-solutions.md](docs/problems-and-solutions.md) |
 | How is the whole system designed? | [architecture.md](FReq_02_03/docs/architecture.md) |
 | How do I run it with Docker? | [docker.md](FReq_02_03/docs/docker.md) |
 | How do I run it without Docker? | [local-setup.md](FReq_02_03/docs/local-setup.md) |
@@ -198,15 +241,9 @@ flutter run --dart-define=API_BASE_URL=http://localhost:8000
 | What happens when a worker or the broker fails? | [reliability.md](FReq_04/docs/reliability.md) |
 | How do I run requirement 4? | [local-setup.md](FReq_04/docs/local-setup.md), [docker.md](FReq_04/docs/docker.md) |
 | What was verified in requirement 4? | [verification-status.md](FReq_04/docs/verification-status.md) |
-
----
-
-## Branches
-
-| Branch | Purpose |
-|---|---|
-| `master` | Stable branch |
-| `checkout` | Working branch with all requirements, merged into `master` through a pull request |
+| How do three instances share work, and which problems appeared? | [scaling.md](FReq_05/docs/scaling.md) |
+| How do I run and read the 500-request test? | [load-testing.md](FReq_05/docs/load-testing.md) |
+| What was verified in requirement 5? | [verification-status.md](FReq_05/docs/verification-status.md) |
 
 ---
 
@@ -226,7 +263,6 @@ flutter run --dart-define=API_BASE_URL=http://localhost:8000
 
 ## Repository Rules
 
-- The `master` branch is protected. Work happens on a branch and enters `master` through a pull request.
 - Never commit a `.env` file. Only `.env.example` files with development values are committed.
 - Generated code (`gen/`, `vendor/`) is not committed.
 - Source code contains no comments. Intent is expressed through names and structure, and explanations live in the documentation.
