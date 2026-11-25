@@ -13,7 +13,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md) · [Requirement 5](../../FReq_05/README.md)
 
 Requirement 4 adds optional `stock.changed` publishing to this service, see [FReq_04/ECInventory/README.md](../../FReq_04/ECInventory/README.md#stock-events).
 

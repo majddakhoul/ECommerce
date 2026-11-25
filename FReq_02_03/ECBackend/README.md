@@ -20,7 +20,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md)
+[Repository](../../README.md) · [Requirement 1](../../FReq_01/README.md) · [Requirements 2 and 3](../README.md) · [Requirement 4](../../FReq_04/README.md) · [Requirement 5](../../FReq_05/README.md)
 
 The `/api/v4/sync` and `/api/v4/async` routes of requirement 4 reuse these controllers and are documented in [FReq_04/ECBackend/README.md](../../FReq_04/ECBackend/README.md).
 
@@ -366,7 +366,7 @@ tests/Feature/
 The request flow is:
 
 ```text
-Route → FormRequest (validation and authorisation) → Controller → Service → Repository (interface and Eloquent) → Model
+Route -> FormRequest (validation and authorisation) -> Controller -> Service -> Repository (interface and Eloquent) -> Model
 ```
 
 ---

@@ -24,7 +24,7 @@ All `/api/v3/performance/*` routes require the `admin` role. They can flush the 
 
 - `.env` files are never committed. The repository ignores them, and the packaged archives exclude them.
 - `.env.example` files hold development values only. `APP_KEY`, `JWT_SECRET`, database passwords and `INVENTORY_API_KEY` must be replaced for any real deployment.
-- If a `.env` file was ever pasted into a chat, an issue or a commit, treat every value in it as exposed: rotate the mail provider app password, regenerate `APP_KEY` with `php artisan key:generate`, and regenerate `JWT_SECRET` with `php artisan jwt:secret`. Rotating `APP_KEY` invalidates encrypted data and sessions, and rotating `JWT_SECRET` signs everyone out.
+- If a `.env` file was ever shared or committed, treat every value in it as exposed: rotate the mail provider app password, regenerate `APP_KEY` with `php artisan key:generate`, and regenerate `JWT_SECRET` with `php artisan jwt:secret`. Rotating `APP_KEY` invalidates encrypted data and sessions, and rotating `JWT_SECRET` signs everyone out.
 
 ## Data integrity
 

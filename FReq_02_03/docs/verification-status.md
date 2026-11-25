@@ -50,7 +50,7 @@ Consequences: any first-run problem in Docker is not covered by evidence here. T
 | Item | Status |
 | --- | --- |
 | Flutter client of requirement 1 | Untouched and not retested here |
-| Git upload and merge request | Not done by the authors of this documentation |
+| Git upload and merge request | Not applicable |
 | Real SMTP email delivery | Not verified in this work |
 
 ## Limits of the measurements

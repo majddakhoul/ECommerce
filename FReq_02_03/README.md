@@ -13,7 +13,7 @@
 <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
-[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](README.md) · [Requirement 4](../FReq_04/README.md)
+[Repository](../README.md) · [Requirement 1](../FReq_01/README.md) · [Requirements 2 and 3](README.md) · [Requirement 4](../FReq_04/README.md) · [Requirement 5](../FReq_05/README.md) · [Documentation hub](../docs/README.md)
 
 Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../FReq_01/README.md). This folder holds requirements 2 and 3 together, because requirement 3 builds directly on the service split of requirement 2: one platform, one Laravel API with the routes `/api/v1`, `/api/v2` and `/api/v3`, and one Go inventory service.
 
@@ -31,6 +31,7 @@ Part of the [ECommerce](../README.md) repository. Requirement 1 is [FReq_01](../
 - [Requirement 3 - Performance and caching](#requirement-3---performance-and-caching)
 - [How the Two Requirements Connect](#how-the-two-requirements-connect)
 - [Requirement 4](#requirement-4)
+- [Requirement 5](#requirement-5)
 - [Verification Status](#verification-status)
 - [Tech Stack](#tech-stack)
 - [License](#license)
@@ -203,6 +204,12 @@ Measured on the local set-up (file cache, no replica): search 43.9 times faster 
 - The inventory service gains one optional behaviour: it publishes `stock.changed` to RabbitMQ when a call carries the metadata `x-publish-events: 1`. Calls without it behave exactly as described here. See [FReq_04/ECInventory/README.md](../FReq_04/ECInventory/README.md#stock-events).
 - The v4 catalog does not use the cache of requirement 3, because live quantities must never be served stale.
 - Both stacks use the same host ports (8000, 3307, 3308, 6379, 8080, 50051), so run only one compose project at a time.
+
+---
+
+## Requirement 5
+
+[FReq_05](../FReq_05/README.md) scales this platform out. The Go inventory service and its contract are shared by three Laravel instances, the Redis cache of requirement 3 becomes the shared state of the cart and the locks, and nginx distributes the requests. The word replica in this document means a database read replica. In requirement 5 the copies of the Laravel application are called instances. See [scaling.md](../FReq_05/docs/scaling.md).
 
 ---
 

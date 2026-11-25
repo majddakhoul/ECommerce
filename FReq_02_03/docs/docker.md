@@ -2,7 +2,7 @@
 
 > [Documentation index](README.md) · [Architecture](architecture.md) · [Local set-up](local-setup.md) · [Troubleshooting](troubleshooting.md)
 
-> Verification status: the Docker configuration was written and reviewed, but it was never built or started by the authors. Every other part of the project was run and tested on a local set-up without Docker, see [verification-status.md](verification-status.md). Expect to fix small problems on the first build, and report them against this file.
+> Verification status: the Docker configuration was written and reviewed, but it was not built or started during development. Every other part of the project was run and tested on a local set-up without Docker, see [verification-status.md](verification-status.md). Expect to fix small problems on the first build, and report them against this file.
 
 ## What the compose file builds
 
